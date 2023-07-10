@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:path_finding/Algorithms/algorithm.dart';
@@ -28,6 +30,7 @@ class GridController extends GetxController {
   @override
   void onInit() {
     createMatrix(100, 100);
+    setRandomStartAndEndBlocks();
     super.onInit();
   }
 
@@ -172,11 +175,32 @@ class GridController extends GetxController {
     }
   }
 
+  void setRandomStartAndEndBlocks() {
+    // Create an instance of the Random class
+    final Random random = Random();
+
+    // Generate a random row number for the start and end nodes
+    final int startRow = random.nextInt(rows);
+    final int endRow = random.nextInt(rows);
+
+    // Generate a random column number for the start and end nodes
+    final int startCol =
+        random.nextInt(columns ~/ 2); // start node on the left half
+    final int endCol = random.nextInt(columns ~/ 2) +
+        columns ~/ 2; // end node on the right half
+
+    // Set the start node
+    matrix[startRow][startCol].value = BlockState.start;
+
+    // Set the end node
+    matrix[endRow][endCol].value = BlockState.end;
+  }
+
   Rx<BlockState> getRxBlockState(int row, int column) {
     return matrix[row][column];
   }
 
-  void applyAlgorithmResult(AlgorithmResult result) {
+  Future<void> applyAlgorithmResult(AlgorithmResult result) async {
     final List<Change> changes = result.changes;
     final AlgorithmPath? path = result.path;
     resetMatrix();
@@ -192,18 +216,20 @@ class GridController extends GetxController {
           matrix[row][column].value == BlockState.end) {
         continue;
       }
-      print("visited $row,$column");
+      // print("visited $row,$column");
       matrix[row][column].value = newState;
+      await Future.delayed(Duration(milliseconds: 2));
     }
 
     // Update the end path
-    updateEndPath(path);
+    await updateEndPath(path);
   }
 
-  void updateEndPath(AlgorithmPath? path) {
+  Future<void> updateEndPath(AlgorithmPath? path) async {
     if (path == null) {
       throw Exception("Did not find end path");
     }
+    
 
     // Apply the new end path
     for (int i = 0; i < path.rows.length; i++) {
@@ -217,6 +243,7 @@ class GridController extends GetxController {
       print("path $row,$col");
 
       matrix[row][col].value = BlockState.path;
+      await Future.delayed(Duration(milliseconds: 2));
     }
   }
 }

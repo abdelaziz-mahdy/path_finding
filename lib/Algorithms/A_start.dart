@@ -1,3 +1,4 @@
+// ignore_for_file: public_member_api_docs, sort_constructors_first
 import 'package:path_finding/controller.dart';
 
 import 'algorithm.dart';
@@ -10,6 +11,7 @@ class AStarAlgorithm implements Algorithm {
     // Retrieve the dimensions of the matrix
     final int rows = matrix.length;
     final int columns = matrix[0].length;
+    final List<Change> changes = []; // Create changes list at the beginning
 
     // Create a 2D grid to track the nodes
     final List<List<AStarNode>> grid = List.generate(
@@ -53,14 +55,16 @@ class AStarAlgorithm implements Algorithm {
       // If the current node is the end node, construct the path
       if (currentNode == endNode) {
         final path = constructPath(currentNode);
-        final changes = matrixToChanges(matrix);
+        // final changes = matrixToChanges(matrix);
         return AlgorithmResult(changes, path);
       }
 
       // Remove the current node from the open set and add it to the closed set
       openSet.remove(currentNode);
       closedSet.add(currentNode);
-
+      changes.add(Change(currentNode.row, currentNode.column,
+          BlockState.visited)); // Add change here
+          
       // Explore the neighbors of the current node
       for (final neighbor in currentNode.getNeighbors(grid, rows, columns)) {
         // Skip neighbors that are already in the closed set or are walls
@@ -82,28 +86,19 @@ class AStarAlgorithm implements Algorithm {
           openSet.add(neighbor);
         }
 
-        // Mark the neighbor as visited in the matrix
-        matrix[neighbor.row][neighbor.column] = BlockState.visited;
+        // // Mark the neighbor as visited in the matrix and add to changes
+        // if (matrix[neighbor.row][neighbor.column] != BlockState.visited) {
+        //   matrix[neighbor.row][neighbor.column] = BlockState.visited;
+
+        // }
       }
     }
 
     // No path found
-    return AlgorithmResult([], null);
+    return AlgorithmResult(changes, null);
   }
 
-  // Converts the matrix to a list of changes for visited nodes
-  List<Change> matrixToChanges(List<List<BlockState>> matrix) {
-    final List<Change> changes = [];
-    for (int row = 0; row < matrix.length; row++) {
-      for (int col = 0; col < matrix[row].length; col++) {
-        final BlockState blockState = matrix[row][col];
-        if (blockState == BlockState.visited) {
-          changes.add(Change(row, col, BlockState.visited));
-        }
-      }
-    }
-    return changes;
-  }
+
 }
 
 // Constructs the path by backtracking from the end node
@@ -119,6 +114,8 @@ AlgorithmPath constructPath(AStarNode? endNode) {
     rows.insert(0, currentNode.row);
     columns.insert(0, currentNode.column);
     currentNode = currentNode.cameFrom!;
+    print(
+        "Path found. Row: ${currentNode.row}, Col: ${currentNode.column}, Came from: (${currentNode.cameFrom?.row}, ${currentNode.cameFrom?.column})");
   }
 
   return AlgorithmPath(rows, columns);
@@ -170,5 +167,20 @@ class AStarNode {
     }
 
     return neighbors;
+  }
+
+  @override
+  bool operator ==(covariant AStarNode other) {
+    if (identical(this, other)) return true;
+  
+    return 
+      other.row == row &&
+      other.column == column;
+  }
+
+  @override
+  int get hashCode {
+    return row.hashCode ^
+      column.hashCode;
   }
 }

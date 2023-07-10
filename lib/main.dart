@@ -103,6 +103,10 @@ class MyHomePage extends StatelessWidget {
     // Perform the algorithm execution using the controller's matrix
     AlgorithmResult result =
         AStarAlgorithm().execute(controller.getMatrixValues());
+    print("ended");
+    print("ended ${result.changes}");
+    print("ended ${result.path}");
+
     // You can access the changes and path from the result object and perform necessary actions
     controller.applyAlgorithmResult(result);
   }
