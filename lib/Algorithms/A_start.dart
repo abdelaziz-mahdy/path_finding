@@ -1,5 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:path_finding/controller.dart';
+import 'package:path_finding/controllers/controller.dart';
 
 import 'algorithm.dart';
 
@@ -8,21 +8,18 @@ class AStarAlgorithm implements Algorithm {
 
   @override
   AlgorithmResult execute(List<List<BlockState>> matrix) {
-    // Retrieve the dimensions of the matrix
     final int rows = matrix.length;
     final int columns = matrix[0].length;
-    final List<Change> changes = []; // Create changes list at the beginning
+    final List<Change> changes = [];
 
-    // Create a 2D grid to track the nodes
     final List<List<AStarNode>> grid = List.generate(
       rows,
       (row) => List.generate(
         columns,
-        (col) => AStarNode(row, col),
+        (col) => AStarNode(row, col, matrix[row][col]),
       ),
     );
 
-    // Retrieve the start and end nodes from the matrix
     AStarNode? startNode;
     AStarNode? endNode;
     for (int row = 0; row < rows; row++) {
@@ -36,44 +33,32 @@ class AStarAlgorithm implements Algorithm {
       }
     }
 
-    // Initialize the open and closed sets for node traversal
-    final List<AStarNode> openSet = [];
+    if (startNode == null || endNode == null) {
+      throw Exception("Start and End nodes need to be set");
+    }
+    startNode.gScore = 0;
+    startNode.calculateFScore(endNode);
+
+    final List<AStarNode> openSet = [startNode];
     final List<AStarNode> closedSet = [];
-    if (startNode == null) {
-      throw Exception("Start node needs to be set");
-    }
-    if (endNode == null) {
-      throw Exception("End node needs to be set");
-    }
-    // Add the start node to the open set
-    openSet.add(startNode);
 
     while (openSet.isNotEmpty) {
-      // Find the node with the lowest fScore in the open set
       final currentNode = openSet.reduce((a, b) => a.fScore < b.fScore ? a : b);
 
-      // If the current node is the end node, construct the path
       if (currentNode == endNode) {
         final path = constructPath(currentNode);
-        // final changes = matrixToChanges(matrix);
         return AlgorithmResult(changes, path);
       }
 
-      // Remove the current node from the open set and add it to the closed set
       openSet.remove(currentNode);
       closedSet.add(currentNode);
-      changes.add(Change(currentNode.row, currentNode.column,
-          BlockState.visited)); // Add change here
-          
-      // Explore the neighbors of the current node
+      changes.add(Change(currentNode.row, currentNode.column, BlockState.visited));
+
       for (final neighbor in currentNode.getNeighbors(grid, rows, columns)) {
-        // Skip neighbors that are already in the closed set or are walls
-        if (closedSet.contains(neighbor) ||
-            neighbor.blockState == BlockState.wall) {
+        if (closedSet.contains(neighbor) || neighbor.blockState == BlockState.wall) {
           continue;
         }
 
-        // Calculate the tentative gScore and update the neighbor if it's a better path
         final tentativeGScore = currentNode.gScore + 1;
         if (tentativeGScore < neighbor.gScore) {
           neighbor.cameFrom = currentNode;
@@ -81,41 +66,29 @@ class AStarAlgorithm implements Algorithm {
           neighbor.calculateFScore(endNode);
         }
 
-        // Add the neighbor to the open set if it's not already there
         if (!openSet.contains(neighbor)) {
           openSet.add(neighbor);
+          changes.add(Change(neighbor.row, neighbor.column, BlockState.visited));
         }
-
-        // // Mark the neighbor as visited in the matrix and add to changes
-        // if (matrix[neighbor.row][neighbor.column] != BlockState.visited) {
-        //   matrix[neighbor.row][neighbor.column] = BlockState.visited;
-
-        // }
       }
     }
 
-    // No path found
     return AlgorithmResult(changes, null);
   }
-
-
 }
 
-// Constructs the path by backtracking from the end node
 AlgorithmPath constructPath(AStarNode? endNode) {
   if (endNode == null) {
     throw Exception("Did not find end path");
   }
   final List<int> rows = [];
   final List<int> columns = [];
-
   var currentNode = endNode;
+
   while (currentNode.cameFrom != null) {
     rows.insert(0, currentNode.row);
     columns.insert(0, currentNode.column);
     currentNode = currentNode.cameFrom!;
-    print(
-        "Path found. Row: ${currentNode.row}, Col: ${currentNode.column}, Came from: (${currentNode.cameFrom?.row}, ${currentNode.cameFrom?.column})");
   }
 
   return AlgorithmPath(rows, columns);
@@ -126,14 +99,13 @@ class AStarNode {
   final int column;
   BlockState blockState;
   AStarNode? cameFrom;
-  int gScore;
+  double gScore;
   int hScore;
-  int fScore;
+  double fScore;
 
-  AStarNode(this.row, this.column)
-      : blockState = BlockState.none,
-        cameFrom = null,
-        gScore = 0,
+  AStarNode(this.row, this.column, this.blockState)
+      : cameFrom = null,
+        gScore = double.infinity,
         hScore = 0,
         fScore = 0;
 
@@ -148,39 +120,20 @@ class AStarNode {
     return dx + dy;
   }
 
-  List<AStarNode> getNeighbors(
-      List<List<AStarNode>> grid, int rows, int columns) {
+  List<AStarNode> getNeighbors(List<List<AStarNode>> grid, int rows, int columns) {
     final List<AStarNode> neighbors = [];
-
-    if (row > 0 && grid[row - 1][column].blockState != BlockState.wall) {
-      neighbors.add(grid[row - 1][column]); // Top
-    }
-    if (row < rows - 1 && grid[row + 1][column].blockState != BlockState.wall) {
-      neighbors.add(grid[row + 1][column]); // Bottom
-    }
-    if (column > 0 && grid[row][column - 1].blockState != BlockState.wall) {
-      neighbors.add(grid[row][column - 1]); // Left
-    }
-    if (column < columns - 1 &&
-        grid[row][column + 1].blockState != BlockState.wall) {
-      neighbors.add(grid[row][column + 1]); // Right
-    }
-
-    return neighbors;
+    if (row > 0) neighbors.add(grid[row - 1][column]);
+    if (row < rows - 1) neighbors.add(grid[row + 1][column]);
+    if (column > 0) neighbors.add(grid[row][column - 1]);
+    if (column < columns - 1) neighbors.add(grid[row][column + 1]);
+    return neighbors.where((node) => node.blockState != BlockState.wall).toList();
   }
 
   @override
   bool operator ==(covariant AStarNode other) {
-    if (identical(this, other)) return true;
-  
-    return 
-      other.row == row &&
-      other.column == column;
+    return other.row == row && other.column == column;
   }
 
   @override
-  int get hashCode {
-    return row.hashCode ^
-      column.hashCode;
-  }
+  int get hashCode => row.hashCode ^ column.hashCode;
 }

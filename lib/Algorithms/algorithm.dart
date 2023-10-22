@@ -1,4 +1,4 @@
-import 'package:path_finding/controller.dart';
+import 'package:path_finding/controllers/controller.dart';
 
 abstract class Algorithm {
   Algorithm();

@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:path_finding/Algorithms/A_start.dart';
-import 'package:path_finding/Algorithms/algorithm.dart';
-import 'package:path_finding/controller.dart';
-import 'package:path_finding/grid.dart';
+import 'package:path_finding/algorithms/A_start.dart';
+import 'package:path_finding/algorithms/algorithm.dart';
+import 'package:path_finding/controllers/controller.dart';
+import 'package:path_finding/widgets/grid.dart';
 
 void main() {
   Get.put(GridController(), permanent: true);

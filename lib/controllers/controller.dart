@@ -2,7 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:path_finding/Algorithms/algorithm.dart';
+import 'package:path_finding/algorithms/algorithm.dart';
 
 enum BlockState {
   start,
@@ -205,7 +205,10 @@ class GridController extends GetxController {
     final AlgorithmPath? path = result.path;
     resetMatrix();
 
-    // Apply the changes to the matrix
+// Calculate the delay duration
+    final int delayDuration = 1000 ~/ changes.length;
+
+// Apply the changes to the matrix
     for (final change in changes) {
       final int row = change.row;
       final int column = change.column;
@@ -218,7 +221,7 @@ class GridController extends GetxController {
       }
       // print("visited $row,$column");
       matrix[row][column].value = newState;
-      await Future.delayed(Duration(milliseconds: 2));
+      await Future.delayed(Duration(milliseconds: delayDuration));
     }
 
     // Update the end path
@@ -229,7 +232,6 @@ class GridController extends GetxController {
     if (path == null) {
       throw Exception("Did not find end path");
     }
-    
 
     // Apply the new end path
     for (int i = 0; i < path.rows.length; i++) {
@@ -240,7 +242,7 @@ class GridController extends GetxController {
           matrix[row][col].value == BlockState.end) {
         continue;
       }
-      print("path $row,$col");
+      // print("path $row,$col");
 
       matrix[row][col].value = BlockState.path;
       await Future.delayed(Duration(milliseconds: 2));
