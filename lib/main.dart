@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:path_finding/algorithms/A_start.dart';
+import 'package:path_finding/algorithms/a_start.dart';
 import 'package:path_finding/controllers/controller.dart';
 import 'package:path_finding/widgets/grid.dart';
 import 'package:path_finding/models/models.dart';
