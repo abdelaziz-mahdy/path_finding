@@ -1,5 +1,5 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:path_finding/algorithms/algorithm.dart';
+import 'package:path_finding/algorithm/algorithm.dart';
 import 'package:path_finding/models/models.dart';
 
 class AStarAlgorithm implements Algorithm {
