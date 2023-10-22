@@ -1,29 +1,8 @@
-import 'package:path_finding/controllers/controller.dart';
+import 'package:path_finding/models/algorithm_result.dart';
+import 'package:path_finding/models/block_state.dart';
 
 abstract class Algorithm {
   Algorithm();
 
   AlgorithmResult execute(List<List<BlockState>> matrix);
-}
-
-class AlgorithmResult {
-  final List<Change> changes;
-  final AlgorithmPath? path;
-
-  AlgorithmResult(this.changes, this.path);
-}
-
-class Change {
-  final int row;
-  final int column;
-  final BlockState newState;
-
-  Change(this.row, this.column, this.newState);
-}
-
-class AlgorithmPath {
-  final List<int> rows;
-  final List<int> columns;
-
-  AlgorithmPath(this.rows, this.columns);
 }

@@ -2,22 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:path_finding/algorithms/algorithm.dart';
-
-enum BlockState {
-  start,
-  end,
-  none,
-  wall,
-  visited,
-  path,
-}
-
-enum CursorType {
-  start,
-  end,
-  wall,
-}
+import 'package:path_finding/models/models.dart';
 
 class GridController extends GetxController {
   final RxBool mouseClicked = false.obs;
@@ -29,7 +14,7 @@ class GridController extends GetxController {
 
   @override
   void onInit() {
-    createMatrix(100, 100);
+    createMatrix(25, 25);
     setRandomStartAndEndBlocks();
     super.onInit();
   }
@@ -245,7 +230,7 @@ class GridController extends GetxController {
       // print("path $row,$col");
 
       matrix[row][col].value = BlockState.path;
-      await Future.delayed(Duration(milliseconds: 2));
+      await Future.delayed(const Duration(milliseconds: 2));
     }
   }
 }

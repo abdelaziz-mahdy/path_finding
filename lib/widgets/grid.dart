@@ -4,7 +4,7 @@ import 'package:path_finding/widgets/block.dart';
 import 'package:path_finding/controllers/controller.dart';
 
 class Grid extends StatefulWidget {
-  Grid({
+  const Grid({
     Key? key,
     required this.horizontalBlockCount,
     required this.verticalBlockCount,
@@ -51,4 +51,3 @@ class _GridState extends State<Grid> {
     );
   }
 }
-

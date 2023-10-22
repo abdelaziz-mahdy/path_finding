@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:path_finding/controllers/controller.dart';
-import 'package:path_finding/widgets/grid.dart';
+import 'package:path_finding/models/block_state.dart';
 
 class Block extends StatefulWidget {
   const Block({
@@ -33,7 +33,7 @@ class _BlockState extends State<Block> {
           },
           child: AnimatedContainer(
             // key: Key(state.value.name),
-            duration: Duration(milliseconds: 100),
+            duration: const Duration(milliseconds: 100),
             decoration: BoxDecoration(
               border: Border.all(
                 color: widget.borderColor,
@@ -42,7 +42,7 @@ class _BlockState extends State<Block> {
               color: widget.controller.getFillColorFromState(state.value),
             ),
 
-            child: SizedBox(),
+            child: const SizedBox(),
           ),
         ));
   }

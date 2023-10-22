@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:path_finding/algorithms/A_start.dart';
-import 'package:path_finding/algorithms/algorithm.dart';
 import 'package:path_finding/controllers/controller.dart';
 import 'package:path_finding/widgets/grid.dart';
+import 'package:path_finding/models/models.dart';
 
 void main() {
   Get.put(GridController(), permanent: true);
@@ -11,7 +11,7 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp();
+  const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatelessWidget {
-  const MyHomePage({required this.title});
+  const MyHomePage({super.key, required this.title});
 
   final String title;
 
@@ -55,31 +55,31 @@ class MyHomePage extends StatelessWidget {
   void _showMenu(BuildContext context) {
     final controller = Get.find<GridController>();
     final menuItems = [
-      PopupMenuItem(
+      const PopupMenuItem(
         value: 'start',
-        child: const Text('Set Start Point'),
+        child: Text('Set Start Point'),
       ),
-      PopupMenuItem(
+      const PopupMenuItem(
         value: 'end',
-        child: const Text('Set End Point'),
+        child: Text('Set End Point'),
       ),
-      PopupMenuItem(
+      const PopupMenuItem(
         value: 'wall',
-        child: const Text('Add Wall'),
+        child: Text('Add Wall'),
       ),
-      PopupMenuItem(
+      const PopupMenuItem(
         value: 'reset',
-        child: const Text('Reset'),
+        child: Text('Reset'),
       ),
-      PopupMenuItem(
+      const PopupMenuItem(
         value: 'startAlgorithm',
-        child: const Text('Start Algorithm'),
+        child: Text('Start Algorithm'),
       ),
     ];
 
     showMenu(
       context: context,
-      position: RelativeRect.fromLTRB(16.0, kToolbarHeight, 16.0, 0.0),
+      position: const RelativeRect.fromLTRB(16.0, kToolbarHeight, 16.0, 0.0),
       items: menuItems,
       elevation: 8.0,
     ).then((value) {

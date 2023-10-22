@@ -1,7 +1,6 @@
 // ignore_for_file: public_member_api_docs, sort_constructors_first
-import 'package:path_finding/controllers/controller.dart';
-
-import 'algorithm.dart';
+import 'package:path_finding/algorithms/algorithm.dart';
+import 'package:path_finding/models/models.dart';
 
 class AStarAlgorithm implements Algorithm {
   AStarAlgorithm() : super();
@@ -52,10 +51,12 @@ class AStarAlgorithm implements Algorithm {
 
       openSet.remove(currentNode);
       closedSet.add(currentNode);
-      changes.add(Change(currentNode.row, currentNode.column, BlockState.visited));
+      changes
+          .add(Change(currentNode.row, currentNode.column, BlockState.visited));
 
       for (final neighbor in currentNode.getNeighbors(grid, rows, columns)) {
-        if (closedSet.contains(neighbor) || neighbor.blockState == BlockState.wall) {
+        if (closedSet.contains(neighbor) ||
+            neighbor.blockState == BlockState.wall) {
           continue;
         }
 
@@ -68,7 +69,8 @@ class AStarAlgorithm implements Algorithm {
 
         if (!openSet.contains(neighbor)) {
           openSet.add(neighbor);
-          changes.add(Change(neighbor.row, neighbor.column, BlockState.visited));
+          changes
+              .add(Change(neighbor.row, neighbor.column, BlockState.visited));
         }
       }
     }
@@ -120,13 +122,16 @@ class AStarNode {
     return dx + dy;
   }
 
-  List<AStarNode> getNeighbors(List<List<AStarNode>> grid, int rows, int columns) {
+  List<AStarNode> getNeighbors(
+      List<List<AStarNode>> grid, int rows, int columns) {
     final List<AStarNode> neighbors = [];
     if (row > 0) neighbors.add(grid[row - 1][column]);
     if (row < rows - 1) neighbors.add(grid[row + 1][column]);
     if (column > 0) neighbors.add(grid[row][column - 1]);
     if (column < columns - 1) neighbors.add(grid[row][column + 1]);
-    return neighbors.where((node) => node.blockState != BlockState.wall).toList();
+    return neighbors
+        .where((node) => node.blockState != BlockState.wall)
+        .toList();
   }
 
   @override
