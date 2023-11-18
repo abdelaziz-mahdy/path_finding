@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:path_finding/algorithm/a_star.dart';
 import 'package:path_finding/controllers/controller.dart';
 import 'package:path_finding/widgets/grid.dart';
 import 'package:path_finding/models/models.dart';
 
 void main() {
-  Get.put(GridController(), permanent: true);
+  GridController();
   runApp(const MyApp());
 }
 
@@ -40,8 +39,8 @@ class MyHomePage extends StatelessWidget {
       ),
       body: Center(
         child: Grid(
-          horizontalBlockCount: Get.find<GridController>().rows,
-          verticalBlockCount: Get.find<GridController>().columns,
+          horizontalBlockCount: GridController().rows,
+          verticalBlockCount: GridController().columns,
         ),
       ),
       floatingActionButton: FloatingActionButton(
@@ -53,7 +52,7 @@ class MyHomePage extends StatelessWidget {
   }
 
   void _showMenu(BuildContext context) {
-    final controller = Get.find<GridController>();
+    final controller = GridController();
     final menuItems = [
       const PopupMenuItem(
         value: 'start',
@@ -99,7 +98,7 @@ class MyHomePage extends StatelessWidget {
   }
 
   void _startAlgorithm() {
-    final controller = Get.find<GridController>();
+    final controller = GridController();
     // Perform the algorithm execution using the controller's matrix
     AlgorithmResult result =
         AStarAlgorithm().execute(controller.getMatrixValues());
