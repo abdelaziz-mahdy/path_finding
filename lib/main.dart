@@ -1,6 +1,10 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:path_finding/algorithm/a_star.dart';
 import 'package:path_finding/controllers/controller.dart';
+import 'package:path_finding/widgets/action_button.dart';
+import 'package:path_finding/widgets/expandable_fab.dart';
 import 'package:path_finding/widgets/grid.dart';
 import 'package:path_finding/models/models.dart';
 
@@ -29,6 +33,26 @@ class MyHomePage extends StatelessWidget {
   const MyHomePage({super.key, required this.title});
 
   final String title;
+  void _handleAction(String action) {
+    final controller = GridController();
+    switch (action) {
+      case 'start':
+        controller.cursorType = CursorType.start;
+        break;
+      case 'end':
+        controller.cursorType = CursorType.end;
+        break;
+      case 'wall':
+        controller.cursorType = CursorType.wall;
+        break;
+      case 'reset':
+        controller.resetMatrix();
+        break;
+      case 'startAlgorithm':
+        _startAlgorithm();
+        break;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,58 +67,47 @@ class MyHomePage extends StatelessWidget {
           verticalBlockCount: GridController().columns,
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showMenu(context),
-        tooltip: 'Options',
-        child: const Icon(Icons.settings),
+      floatingActionButton: ExpandableFab(
+        distance: max(100, MediaQuery.sizeOf(context).width * 0.15),
+        children: [
+          ActionButton(
+            onPressed: () => _handleAction('start'),
+            icon: const Text(
+              "Start",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          ActionButton(
+            onPressed: () => _handleAction('end'),
+            icon: const Text(
+              "End",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          ActionButton(
+            onPressed: () => _handleAction('wall'),
+            icon: const Text(
+              "Wall",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          ActionButton(
+            onPressed: () => _handleAction('reset'),
+            icon: const Text(
+              "Reset",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+          ActionButton(
+            onPressed: () => _handleAction('startAlgorithm'),
+            icon: const Text(
+              "Run",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
       ),
     );
-  }
-
-  void _showMenu(BuildContext context) {
-    final controller = GridController();
-    final menuItems = [
-      const PopupMenuItem(
-        value: 'start',
-        child: Text('Set Start Point'),
-      ),
-      const PopupMenuItem(
-        value: 'end',
-        child: Text('Set End Point'),
-      ),
-      const PopupMenuItem(
-        value: 'wall',
-        child: Text('Add Wall'),
-      ),
-      const PopupMenuItem(
-        value: 'reset',
-        child: Text('Reset'),
-      ),
-      const PopupMenuItem(
-        value: 'startAlgorithm',
-        child: Text('Start Algorithm'),
-      ),
-    ];
-
-    showMenu(
-      context: context,
-      position: const RelativeRect.fromLTRB(16.0, kToolbarHeight, 16.0, 0.0),
-      items: menuItems,
-      elevation: 8.0,
-    ).then((value) {
-      if (value == 'start') {
-        controller.cursorType = CursorType.start;
-      } else if (value == 'end') {
-        controller.cursorType = CursorType.end;
-      } else if (value == 'wall') {
-        controller.cursorType = CursorType.wall;
-      } else if (value == 'reset') {
-        controller.resetMatrix();
-      } else if (value == 'startAlgorithm') {
-        // Start the algorithm
-        _startAlgorithm();
-      }
-    });
   }
 
   void _startAlgorithm() {
