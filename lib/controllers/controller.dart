@@ -2,8 +2,6 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:path_finding/models/models.dart';
-import 'dart:math';
-import 'package:flutter/material.dart';
 
 class GridController {
   // Singleton instance, initialized immediately
@@ -29,7 +27,7 @@ class GridController {
   CursorType cursorType = CursorType.wall;
 
   void _onInit() {
-    createMatrix(100, 100);
+    createMatrix(25, 25);
     setRandomStartAndEndBlocks();
   }
 
