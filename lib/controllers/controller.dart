@@ -29,7 +29,7 @@ class GridController {
   CursorType cursorType = CursorType.wall;
 
   void _onInit() {
-    createMatrix(25, 25);
+    createMatrix(100, 100);
     setRandomStartAndEndBlocks();
   }
 
@@ -204,10 +204,14 @@ class GridController {
     final AlgorithmPath? path = result.path;
     resetMatrix();
 
-// Calculate the delay duration
-    final int delayDuration = 1000 ~/ changes.length;
+    // Calculate the delay duration based on the number of changes
+    // Set a minimum and maximum for the delay
+    const int minDelay = 5; // Minimum delay in milliseconds
+    const int maxDelay = 200; // Maximum delay in milliseconds
+    int delayDuration = (1000 ~/ changes.length).clamp(minDelay, maxDelay);
+    print("delayDuration $delayDuration");
 
-// Apply the changes to the matrix
+    // Apply the changes to the matrix
     for (final change in changes) {
       final int row = change.row;
       final int column = change.column;
@@ -218,7 +222,7 @@ class GridController {
           matrix[row][column].value == BlockState.end) {
         continue;
       }
-      // print("visited $row,$column");
+
       matrix[row][column].value = newState;
       await Future.delayed(Duration(milliseconds: delayDuration));
     }
