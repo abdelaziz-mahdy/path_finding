@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:path_finding/widgets/block.dart';
 import 'package:path_finding/controllers/controller.dart';
 
@@ -22,7 +21,7 @@ class Grid extends StatefulWidget {
 class _GridState extends State<Grid> {
   @override
   Widget build(BuildContext context) {
-    GridController controller = Get.find<GridController>();
+    GridController controller = GridController();
     return GestureDetector(
       onTapDown: (details) {
         controller.isMouseClicked = true;

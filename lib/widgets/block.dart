@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:path_finding/controllers/controller.dart';
 import 'package:path_finding/models/block_state.dart';
 
@@ -24,26 +23,30 @@ class Block extends StatefulWidget {
 class _BlockState extends State<Block> {
   @override
   Widget build(BuildContext context) {
-    final Rx<BlockState> state =
+    // Assuming getRxBlockState is now returning ValueNotifier<BlockState>
+    final ValueNotifier<BlockState> stateNotifier =
         widget.controller.getRxBlockState(widget.row, widget.col);
 
-    return Obx(() => MouseRegion(
+    return ValueListenableBuilder<BlockState>(
+      valueListenable: stateNotifier,
+      builder: (context, state, child) {
+        return MouseRegion(
           onEnter: (event) {
             widget.controller.updateBlockState(widget.row, widget.col);
           },
           child: AnimatedContainer(
-            // key: Key(state.value.name),
             duration: const Duration(milliseconds: 100),
             decoration: BoxDecoration(
               border: Border.all(
                 color: widget.borderColor,
                 width: 1.0,
               ),
-              color: widget.controller.getFillColorFromState(state.value),
+              color: widget.controller.getFillColorFromState(state),
             ),
-
             child: const SizedBox(),
           ),
-        ));
+        );
+      },
+    );
   }
 }
