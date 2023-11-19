@@ -44,6 +44,7 @@ class _GridState extends State<Grid> {
           double aspectRatio = blockWidth / blockHeight;
 
           return GridView.builder(
+            physics: NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: widget.horizontalBlockCount,
               childAspectRatio: aspectRatio,
