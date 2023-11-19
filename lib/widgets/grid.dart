@@ -24,7 +24,10 @@ class _GridState extends State<Grid> {
       GridController(); // Assuming GridController is defined elsewhere
   int justUpdatedRow = -1;
   int justUpdatedCol = -1;
-  void _updateBlock(int row, int col) {
+  void _handlePointerMove(
+      PointerEvent details, double blockWidth, double blockHeight) {
+    int row = (details.localPosition.dy / blockHeight).floor();
+    int col = (details.localPosition.dx / blockWidth).floor();
     if (row == justUpdatedRow && col == justUpdatedCol) {
       return;
     }
@@ -35,43 +38,47 @@ class _GridState extends State<Grid> {
 
   @override
   Widget build(BuildContext context) {
-    return Listener(
-      onPointerDown: (details) {
-        controller.isMouseClicked = true;
-      },
-      onPointerUp: (details) {
-        controller.isMouseClicked = false;
-      },
-      child: LayoutBuilder(
-        builder: (BuildContext context, BoxConstraints constraints) {
-          double gridWidth = constraints.maxWidth;
-          double gridHeight = constraints.maxHeight;
-          double blockWidth = gridWidth / widget.horizontalBlockCount;
-          double blockHeight = gridHeight / widget.verticalBlockCount;
-          double aspectRatio = blockWidth / blockHeight;
+    return LayoutBuilder(
+      builder: (BuildContext context, BoxConstraints constraints) {
+        double gridWidth = constraints.maxWidth;
+        double gridHeight = constraints.maxHeight;
+        double blockWidth = gridWidth / widget.horizontalBlockCount;
+        double blockHeight = gridHeight / widget.verticalBlockCount;
+        double aspectRatio = blockWidth / blockHeight;
 
-          return GridView.builder(
-            physics: const NeverScrollableScrollPhysics(),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: widget.horizontalBlockCount,
-              childAspectRatio: aspectRatio,
-            ),
-            itemCount: widget.horizontalBlockCount * widget.verticalBlockCount,
-            itemBuilder: (context, index) {
-              final row = index ~/ widget.horizontalBlockCount;
-              final col = index % widget.horizontalBlockCount;
-
-              return Block(
-                controller: controller,
-                onUpdate: _updateBlock,
-                borderColor: widget.borderColor,
-                row: row,
-                col: col,
-              );
+        return Listener(
+            onPointerDown: (details) {
+              controller.isMouseClicked = true;
+              print(" mouse clicked ");
             },
-          );
-        },
-      ),
+            onPointerUp: (details) {
+              controller.isMouseClicked = false;
+              print(" mouse released ");
+            },
+            onPointerMove: (details) {
+              _handlePointerMove(details, blockWidth, blockHeight);
+            },
+            child: GridView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: widget.horizontalBlockCount,
+                childAspectRatio: aspectRatio,
+              ),
+              itemCount:
+                  widget.horizontalBlockCount * widget.verticalBlockCount,
+              itemBuilder: (context, index) {
+                final row = index ~/ widget.horizontalBlockCount;
+                final col = index % widget.horizontalBlockCount;
+
+                return Block(
+                  controller: controller,
+                  borderColor: widget.borderColor,
+                  row: row,
+                  col: col,
+                );
+              },
+            ));
+      },
     );
   }
 }
