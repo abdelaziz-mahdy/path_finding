@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:path_finding/widgets/block.dart';
 import 'package:path_finding/controllers/controller.dart';
 
@@ -22,7 +21,8 @@ class Grid extends StatefulWidget {
 class _GridState extends State<Grid> {
   @override
   Widget build(BuildContext context) {
-    GridController controller = Get.find<GridController>();
+    GridController controller = GridController();
+
     return GestureDetector(
       onTapDown: (details) {
         controller.isMouseClicked = true;
@@ -30,21 +30,37 @@ class _GridState extends State<Grid> {
       onTapUp: (details) {
         controller.isMouseClicked = false;
       },
-      child: GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: widget.horizontalBlockCount,
-          childAspectRatio: 1.0,
-        ),
-        itemCount: widget.horizontalBlockCount * widget.verticalBlockCount,
-        itemBuilder: (context, index) {
-          final row = index ~/ widget.horizontalBlockCount;
-          final col = index % widget.horizontalBlockCount;
+      child: LayoutBuilder(
+        builder: (BuildContext context, BoxConstraints constraints) {
+          // Calculate the width and height based on the parent's constraints
+          double gridWidth = constraints.maxWidth;
+          double gridHeight = constraints.maxHeight;
 
-          return Block(
-            controller: controller,
-            borderColor: widget.borderColor,
-            row: row,
-            col: col,
+          // Calculate the size of each block
+          double blockWidth = gridWidth / widget.horizontalBlockCount;
+          double blockHeight = gridHeight / widget.verticalBlockCount;
+
+          // Calculate aspect ratio
+          double aspectRatio = blockWidth / blockHeight;
+
+          return GridView.builder(
+            physics: NeverScrollableScrollPhysics(),
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: widget.horizontalBlockCount,
+              childAspectRatio: aspectRatio,
+            ),
+            itemCount: widget.horizontalBlockCount * widget.verticalBlockCount,
+            itemBuilder: (context, index) {
+              final row = index ~/ widget.horizontalBlockCount;
+              final col = index % widget.horizontalBlockCount;
+
+              return Block(
+                controller: controller,
+                borderColor: widget.borderColor,
+                row: row,
+                col: col,
+              );
+            },
           );
         },
       ),

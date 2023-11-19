@@ -1,22 +1,34 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:path_finding/models/models.dart';
 
-class GridController extends GetxController {
-  final RxBool mouseClicked = false.obs;
-  final RxBool findingPath = false.obs;
-  late List<List<Rx<BlockState>>> matrix;
+class GridController {
+  // Singleton instance, initialized immediately
+  static final GridController _instance = GridController._internal();
+
+  // Factory constructor
+  factory GridController() {
+    return _instance;
+  }
+
+  // Private constructor
+  GridController._internal() {
+    _onInit();
+  }
+
+  // Replace RxBool with ValueNotifier
+  final ValueNotifier<bool> mouseClicked = ValueNotifier(false);
+  final ValueNotifier<bool> findingPath = ValueNotifier(false);
+
+  late List<List<ValueNotifier<BlockState>>> matrix;
   late int rows;
   late int columns;
   CursorType cursorType = CursorType.wall;
 
-  @override
-  void onInit() {
+  void _onInit() {
     createMatrix(25, 25);
     setRandomStartAndEndBlocks();
-    super.onInit();
   }
 
   Color fillColor(int row, int column) {
@@ -141,9 +153,9 @@ class GridController extends GetxController {
 
     matrix = List.generate(
       rows,
-      (_) => List<Rx<BlockState>>.generate(
+      (_) => List<ValueNotifier<BlockState>>.generate(
         columns,
-        (_) => Rx<BlockState>(BlockState.none),
+        (_) => ValueNotifier<BlockState>(BlockState.none),
       ),
     );
   }
@@ -181,7 +193,7 @@ class GridController extends GetxController {
     matrix[endRow][endCol].value = BlockState.end;
   }
 
-  Rx<BlockState> getRxBlockState(int row, int column) {
+  ValueNotifier<BlockState> getRxBlockState(int row, int column) {
     return matrix[row][column];
   }
 
@@ -190,10 +202,14 @@ class GridController extends GetxController {
     final AlgorithmPath? path = result.path;
     resetMatrix();
 
-// Calculate the delay duration
-    final int delayDuration = 1000 ~/ changes.length;
+    // Calculate the delay duration based on the number of changes
+    // Set a minimum and maximum for the delay
+    const int minDelay = 5; // Minimum delay in milliseconds
+    const int maxDelay = 200; // Maximum delay in milliseconds
+    int delayDuration = (1000 ~/ changes.length).clamp(minDelay, maxDelay);
+    print("delayDuration $delayDuration");
 
-// Apply the changes to the matrix
+    // Apply the changes to the matrix
     for (final change in changes) {
       final int row = change.row;
       final int column = change.column;
@@ -204,7 +220,7 @@ class GridController extends GetxController {
           matrix[row][column].value == BlockState.end) {
         continue;
       }
-      // print("visited $row,$column");
+
       matrix[row][column].value = newState;
       await Future.delayed(Duration(milliseconds: delayDuration));
     }
