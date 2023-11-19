@@ -28,7 +28,7 @@ class _BlockState extends State<Block> {
       valueListenable: stateNotifier,
       builder: (context, state, child) {
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 100),
+          duration: const Duration(milliseconds: 250),
           decoration: BoxDecoration(
             border: Border.all(
               color: widget.borderColor,
