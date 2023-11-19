@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:path_finding/widgets/block.dart';
 import 'package:path_finding/controllers/controller.dart';
+import 'package:path_finding/widgets/block.dart';
+// Import your GridController and Block classes here
 
 class Grid extends StatefulWidget {
   const Grid({
@@ -19,32 +20,38 @@ class Grid extends StatefulWidget {
 }
 
 class _GridState extends State<Grid> {
+  final GridController controller =
+      GridController(); // Assuming GridController is defined elsewhere
+  int justUpdatedRow = -1;
+  int justUpdatedCol = -1;
+  void _updateBlock(int row, int col) {
+    if (row == justUpdatedRow && col == justUpdatedCol) {
+      return;
+    }
+    controller.updateBlockState(row, col);
+    justUpdatedRow = row;
+    justUpdatedCol = col;
+  }
+
   @override
   Widget build(BuildContext context) {
-    GridController controller = GridController();
-
-    return GestureDetector(
-      onTapDown: (details) {
+    return Listener(
+      onPointerDown: (details) {
         controller.isMouseClicked = true;
       },
-      onTapUp: (details) {
+      onPointerUp: (details) {
         controller.isMouseClicked = false;
       },
       child: LayoutBuilder(
         builder: (BuildContext context, BoxConstraints constraints) {
-          // Calculate the width and height based on the parent's constraints
           double gridWidth = constraints.maxWidth;
           double gridHeight = constraints.maxHeight;
-
-          // Calculate the size of each block
           double blockWidth = gridWidth / widget.horizontalBlockCount;
           double blockHeight = gridHeight / widget.verticalBlockCount;
-
-          // Calculate aspect ratio
           double aspectRatio = blockWidth / blockHeight;
 
           return GridView.builder(
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: widget.horizontalBlockCount,
               childAspectRatio: aspectRatio,
@@ -56,6 +63,7 @@ class _GridState extends State<Grid> {
 
               return Block(
                 controller: controller,
+                onUpdate: _updateBlock,
                 borderColor: widget.borderColor,
                 row: row,
                 col: col,
