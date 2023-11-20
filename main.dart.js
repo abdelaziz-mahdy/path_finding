@@ -62472,7 +62472,7 @@ break
 case 4:return A.W(null,r)}})
 return A.X($async$tc,r)}}
 A.Cq.prototype={
-N(a){return new A.t6(B.DR,"Flutter Demo",A.adR(null,A.ajG(B.O,B.Dy),!0),null)}}
+N(a){return new A.t6(B.DR,"Path Finding Visualizer",A.adR(null,A.ajG(B.O,B.Dy),!0),null)}}
 A.Cr.prototype={
 mB(a){var s,r=$.Nv()
 switch(a){case"start":r.f=B.yU
@@ -62496,7 +62496,7 @@ s=o.d
 s===$&&A.c()
 o=o.e
 o===$&&A.c()
-return new A.um(new A.pZ(new A.hF("Flutter Demo Home Page",q,q,q,q),p,new A.JP(q,q,1/0,56),q),A.zz(new A.rq(s,o,q),q,q),new A.r7(Math.max(100,A.cK(a,B.vt,t.w).w.a.a*0.15),A.a([new A.jn(new A.UP(r),B.Ll,q),new A.jn(new A.UQ(r),B.Ln,q),new A.jn(new A.UR(r),B.Lm,q),new A.jn(new A.US(r),B.Lp,q),new A.jn(new A.UT(r),B.Lo,q)],t.V),q),q)}}
+return new A.um(new A.pZ(new A.hF("Path Finding Visualizer",q,q,q,q),p,new A.JP(q,q,1/0,56),q),A.zz(new A.rq(s,o,q),q,q),new A.r7(Math.max(100,A.cK(a,B.vt,t.w).w.a.a*0.15),A.a([new A.jn(new A.UP(r),B.Ll,q),new A.jn(new A.UQ(r),B.Ln,q),new A.jn(new A.UR(r),B.Lm,q),new A.jn(new A.US(r),B.Lp,q),new A.jn(new A.UT(r),B.Lo,q)],t.V),q),q)}}
 A.UP.prototype={
 $0(){return this.a.mB("start")},
 $S:0}
