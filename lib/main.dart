@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:path_finding/algorithm/a_star.dart';
 import 'package:path_finding/controllers/controller.dart';
 import 'package:path_finding/widgets/action_button.dart';
@@ -9,6 +10,8 @@ import 'package:path_finding/widgets/grid.dart';
 import 'package:path_finding/models/models.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.remove();
   GridController();
   runApp(const MyApp());
 }
