@@ -82,7 +82,7 @@ class GridController {
   void updateBlockState(int row, int column) {
     if (isChangingWallStateAllowed) {
       final currentBlockState = matrix[row][column].value;
-      BlockState newBlockState;
+      BlockState newBlockState = currentBlockState;
 
       switch (cursorType) {
         case CursorType.start:
@@ -94,10 +94,13 @@ class GridController {
           resetEndPoint(); // Reset any existing end point
           break;
         case CursorType.wall:
+          newBlockState = BlockState.wall;
+        case CursorType.eraser:
+          if (currentBlockState == BlockState.wall) {
+            newBlockState = BlockState.none;
+          }
+        case CursorType.none:
         default:
-          newBlockState = currentBlockState == BlockState.wall
-              ? BlockState.none
-              : BlockState.wall;
           break;
       }
 
