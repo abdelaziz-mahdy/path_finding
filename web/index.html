@@ -1,7 +1,4 @@
-<!DOCTYPE html>
-<html>
-
-<head>
+<!DOCTYPE html><html><head>
   <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.
@@ -49,26 +46,28 @@
 
 
 
+  
+  
   <style id="splash-screen-style">
     .flutter-loader {
       z-index: 999999;
     }
-
+    
     #splash {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      top: 0px;
-      left: 0px;
-      z-index: 999998;
-      opacity: 1;
-      /* animation type and duration */
-      transition: opacity 0.25s;
-      background-color: #c4e3fc;
-      -moz-osx-font-smoothing: grayscale;
-      -webkit-font-smoothing: antialiased;
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        top: 0px;
+        left: 0px;
+        z-index: 999998;
+        opacity: 1;
+        /* animation type and duration */
+        transition: opacity 0.25s;
+        background-color: #c4e3fc;
+              -moz-osx-font-smoothing: grayscale;
+        -webkit-font-smoothing: antialiased;
     }
-
+    
     #splash.remove {
       /* enable click through when run animation */
       pointer-events: none;
@@ -86,22 +85,19 @@
     }
 
     #splash .contain {
-      display: block;
-      width: 100%;
-      height: 100%;
+      display:block;
+      width:100%; height:100%;
       object-fit: contain;
     }
 
     #splash .stretch {
-      display: block;
-      width: 100%;
-      height: 100%;
+      display:block;
+      width:100%; height:100%;
     }
 
     #splash .cover {
-      display: block;
-      width: 100%;
-      height: 100%;
+      display:block;
+      width:100%; height:100%;
       object-fit: cover;
     }
 
@@ -125,32 +121,30 @@
       right: 0;
     }
   </style>
-  <script id="splash-screen-script">
-    function removeSplashFromWeb() {
-      const splashElement = document.getElementById("splash");
+<script id="splash-screen-script">
+  function removeSplashFromWeb() {
+    const splashElement = document.getElementById("splash");
+    if (splashElement) {
       splashElement.classList.add("remove");
       setTimeout(function () {
         splashElement.remove();
-        document.getElementById("splash-screen-script")?.remove();
       }, 750 /* animation time + wait rendering and others(500ms) */);
     }
-  </script>
+  }
+</script>
 </head>
 
 <body>
-
-
   <div id="splash">
     <picture>
-      <source
-        srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x"
-        media="(prefers-color-scheme: light)">
-      <source
-        srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x"
-        media="(prefers-color-scheme: dark)">
-      <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
+        <source srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x" media="(prefers-color-scheme: light)">
+        <source srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x" media="(prefers-color-scheme: dark)">
+        <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
     </picture>
   </div>
+
+
+  
 
   <div class="container">
     <div class="progress-bar__container">
@@ -189,6 +183,6 @@
 
 
 
-</body>
 
-</html>
+
+</body></html>
