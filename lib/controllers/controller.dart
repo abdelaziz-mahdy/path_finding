@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:path_finding/algorithm/a_star.dart';
 import 'package:path_finding/models/models.dart';
 
 class GridController {
@@ -15,6 +16,7 @@ class GridController {
   // Private constructor
   GridController._internal() {
     _onInit();
+
   }
 
   // Replace RxBool with ValueNotifier

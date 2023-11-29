@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:path_finding/algorithm/a_star.dart';
+import 'package:path_finding/algorithm/algorithm.dart';
+import 'package:path_finding/algorithm/dijkstra.dart';
 import 'package:path_finding/controllers/controller.dart';
 import 'package:path_finding/widgets/grid.dart';
 import 'package:path_finding/models/models.dart';
@@ -34,12 +36,12 @@ class MyHomePage extends StatefulWidget {
   final String title;
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
   String _selectedAction = 'none';
-
+  Algorithm _algorithm = AStarAlgorithm();
   void _handleAction(String action) {
     setState(() {
       _selectedAction = _selectedAction == action ? 'none' : action;
@@ -76,6 +78,31 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        actions: [
+          DropdownButton<Algorithm>(
+            value: _algorithm,
+            items: [
+              DropdownMenuItem<Algorithm>(
+                value: DijkstraAlgorithm(),
+                child: const Text('Dijkstra'),
+              ),
+              DropdownMenuItem<Algorithm>(
+                value: AStarAlgorithm(),
+                child: const Text('A*'),
+              ),
+            ],
+            onChanged: (Algorithm? value) {
+              if (value != null) {
+                setState(() {
+                  _algorithm = value;
+                });
+              }
+            },
+          ),
+          SizedBox(
+            width: 100,
+          )
+        ],
       ),
       body: Center(
         child: Grid(
@@ -142,8 +169,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _startAlgorithm() {
     final controller = GridController();
-    AlgorithmResult result =
-        AStarAlgorithm().execute(controller.getMatrixValues());
+    AlgorithmResult result = _algorithm.execute(controller.getMatrixValues());
     controller.applyAlgorithmResult(result);
   }
 }
@@ -185,10 +211,10 @@ class ActionButtonWidget extends StatelessWidget {
 
     return FloatingActionButton(
       onPressed: () => handleAction(action),
+      backgroundColor: backgroundColor,
       child: icon != null
           ? Icon(icon, color: textStyle.color)
           : Text(label, style: textStyle),
-      backgroundColor: backgroundColor,
     );
   }
 }
