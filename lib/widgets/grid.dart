@@ -26,6 +26,7 @@ class _GridState extends State<Grid> {
   int justUpdatedCol = -1;
   void _handlePointerMove(
       PointerEvent details, double blockWidth, double blockHeight) {
+    
     int row = (details.localPosition.dy / blockHeight).floor();
     int col = (details.localPosition.dx / blockWidth).floor();
     if (row == justUpdatedRow && col == justUpdatedCol) {

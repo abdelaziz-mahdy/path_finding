@@ -82,6 +82,10 @@ class GridController {
   }
 
   void updateBlockState(int row, int column) {
+    if(rows<0 || columns<0 || row>=rows || column>=columns){
+      print("out of bounds");
+      return;
+    }
     if (isChangingWallStateAllowed) {
       final currentBlockState = matrix[row][column].value;
       BlockState newBlockState = currentBlockState;
