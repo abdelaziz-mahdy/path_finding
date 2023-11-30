@@ -52,7 +52,7 @@ class SpeedControlSlider extends StatelessWidget {
                 value * totalDurationRange;
             onChanged(Duration(milliseconds: durationValue.round()));
           },
-          label: 'Speed',
+          // label: 'Speed',
           // activeColor: Colors.blue,
           // inactiveColor: Colors.blue.withOpacity(0.3),
         ),

@@ -94,6 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
           const SizedBox(
             width: 10,
           ),
+
           SpeedControlSlider(
               slowestSpeedDuration: const Duration(milliseconds: 300),
               fastestSpeedDuration: const Duration(milliseconds: 1),
@@ -102,7 +103,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 setState(() {
                   this.timeBetweenChanges = timeBetweenChanges;
                 });
-              })
+              }),
         ],
       ),
       body: Center(
