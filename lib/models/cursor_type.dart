@@ -1,7 +1,1 @@
-enum CursorType {
-  start,
-  end,
-  wall,
-  none,
-  eraser
-}
+enum CursorType { start, end, wall, none, eraser }

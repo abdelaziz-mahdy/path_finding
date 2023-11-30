@@ -22,7 +22,8 @@ class Block extends StatefulWidget {
 class _BlockState extends State<Block> {
   @override
   Widget build(BuildContext context) {
-    final ValueNotifier<BlockState> stateNotifier = widget.controller.getRxBlockState(widget.row, widget.col);
+    final ValueNotifier<BlockState> stateNotifier =
+        widget.controller.getRxBlockState(widget.row, widget.col);
 
     return ValueListenableBuilder<BlockState>(
       valueListenable: stateNotifier,

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:path_finding/algorithm/a_star.dart';
 import 'package:path_finding/algorithm/algorithm.dart';
-import 'package:path_finding/algorithm/dijkstra.dart';
 import 'package:path_finding/controllers/controller.dart';
+import 'package:path_finding/widgets/action_button_widget.dart';
+import 'package:path_finding/widgets/algorithms.dart';
 import 'package:path_finding/widgets/grid.dart';
 import 'package:path_finding/models/models.dart';
+import 'package:path_finding/widgets/speed_control_slider.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,6 +44,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String _selectedAction = 'none';
   Algorithm _algorithm = AStarAlgorithm();
+  Duration timeBetweenChanges = const Duration(milliseconds: 20);
   void _handleAction(String action) {
     setState(() {
       _selectedAction = _selectedAction == action ? 'none' : action;
@@ -79,29 +82,27 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
         actions: [
-          DropdownButton<Algorithm>(
-            value: _algorithm,
-            items: [
-              DropdownMenuItem<Algorithm>(
-                value: DijkstraAlgorithm(),
-                child: const Text('Dijkstra'),
-              ),
-              DropdownMenuItem<Algorithm>(
-                value: AStarAlgorithm(),
-                child: const Text('A*'),
-              ),
-            ],
-            onChanged: (Algorithm? value) {
-              if (value != null) {
-                setState(() {
-                  _algorithm = value;
-                });
-              }
+          // Spacer(),
+          Algorithms(
+            onChanged: (Algorithm algorithm) {
+              setState(() {
+                _algorithm = algorithm;
+              });
             },
+            value: _algorithm,
           ),
-          SizedBox(
-            width: 100,
-          )
+          const SizedBox(
+            width: 10,
+          ),
+          SpeedControlSlider(
+              slowestSpeedDuration: const Duration(milliseconds: 300),
+              fastestSpeedDuration: const Duration(milliseconds: 1),
+              currentValue: timeBetweenChanges,
+              onChanged: (Duration timeBetweenChanges) {
+                setState(() {
+                  this.timeBetweenChanges = timeBetweenChanges;
+                });
+              })
         ],
       ),
       body: Center(
@@ -170,51 +171,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _startAlgorithm() {
     final controller = GridController();
     AlgorithmResult result = _algorithm.execute(controller.getMatrixValues());
-    controller.applyAlgorithmResult(result);
-  }
-}
-
-class ActionButtonWidget extends StatelessWidget {
-  final String action;
-  final String label;
-  final IconData? icon;
-  final String selectedAction;
-  final Function(String) handleAction;
-  final bool isCursorType;
-
-  const ActionButtonWidget({
-    Key? key,
-    this.icon,
-    required this.action,
-    required this.label,
-    required this.selectedAction,
-    required this.handleAction,
-    required this.isCursorType,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    bool isSelected = selectedAction == action;
-    TextStyle textStyle = TextStyle(
-        color: isSelected
-            ? Theme.of(context).colorScheme.onPrimary
-            : Theme.of(context).colorScheme.onSecondary);
-    Color backgroundColor = isSelected
-        ? Theme.of(context).colorScheme.primary
-        : Theme.of(context).colorScheme.secondary;
-
-    if (!isCursorType) {
-      textStyle =
-          TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer);
-      backgroundColor = Theme.of(context).colorScheme.primaryContainer;
-    }
-
-    return FloatingActionButton(
-      onPressed: () => handleAction(action),
-      backgroundColor: backgroundColor,
-      child: icon != null
-          ? Icon(icon, color: textStyle.color)
-          : Text(label, style: textStyle),
-    );
+    controller.applyAlgorithmResult(result,
+        timeBetweenChanges: timeBetweenChanges);
   }
 }

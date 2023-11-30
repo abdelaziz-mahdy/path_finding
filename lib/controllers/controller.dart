@@ -1,7 +1,6 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:path_finding/algorithm/a_star.dart';
 import 'package:path_finding/models/models.dart';
 
 class GridController {
@@ -16,7 +15,6 @@ class GridController {
   // Private constructor
   GridController._internal() {
     _onInit();
-
   }
 
   // Replace RxBool with ValueNotifier
@@ -82,7 +80,7 @@ class GridController {
   }
 
   void updateBlockState(int row, int column) {
-    if(rows<0 || columns<0 || row>=rows || column>=columns){
+    if (rows < 0 || columns < 0 || row >= rows || column >= columns) {
       print("out of bounds");
       return;
     }
@@ -206,17 +204,11 @@ class GridController {
     return matrix[row][column];
   }
 
-  Future<void> applyAlgorithmResult(AlgorithmResult result) async {
+  Future<void> applyAlgorithmResult(AlgorithmResult result,
+      {Duration timeBetweenChanges = const Duration(milliseconds: 20)}) async {
     final List<Change> changes = result.changes;
     final AlgorithmPath? path = result.path;
     resetMatrix();
-
-    // Calculate the delay duration based on the number of changes
-    // Set a minimum and maximum for the delay
-    const int minDelay = 5; // Minimum delay in milliseconds
-    const int maxDelay = 200; // Maximum delay in milliseconds
-    int delayDuration = (1000 ~/ changes.length).clamp(minDelay, maxDelay);
-    print("delayDuration $delayDuration");
 
     // Apply the changes to the matrix
     for (final change in changes) {
@@ -231,7 +223,7 @@ class GridController {
       }
 
       matrix[row][column].value = newState;
-      await Future.delayed(Duration(milliseconds: delayDuration));
+      await Future.delayed(timeBetweenChanges);
     }
 
     // Update the end path
