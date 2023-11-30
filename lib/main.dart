@@ -104,6 +104,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   this.timeBetweenChanges = timeBetweenChanges;
                 });
               }),
+                        const SizedBox(
+            width: 10,
+          ),
+
         ],
       ),
       body: Center(
