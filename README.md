@@ -1,16 +1,21 @@
-# path_finding
+# Path Finding Algorithm Visualizer
 
-A new Flutter project.
+## Introduction
+Welcome to the Path Finding Algorithm Visualizer, a Flutter application that demonstrates the mechanics of popular pathfinding algorithms like A* and Dijkstra's. This tool is designed to help users visualize how these algorithms traverse a grid to determine the shortest path.
+
+## Features
+- **Algorithm Visualization**: Experience A* and Dijkstra's algorithm in a dynamic, easy-to-understand format.
+- **Responsive UI**: Optimized for both mobile and desktop, ensuring a consistent user experience across devices.
+- **Design Patterns**: Built using efficient and maintainable coding practices and design patterns.
+
+## Live Demo
+Experience the Path Finding Algorithm Visualizer in action: [Live Demo](https://zezo357.github.io/path_finding/)
 
 ## Getting Started
+To run this project locally, clone the repository and ensure Flutter is installed on your machine.
 
-This project is a starting point for a Flutter application.
+```bash
+git clone https://github.com/zezo357/path_finding.git
+cd path_finding
+flutter run
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
