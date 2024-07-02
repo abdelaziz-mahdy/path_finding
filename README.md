@@ -9,13 +9,13 @@ Welcome to the Path Finding Algorithm Visualizer, a Flutter application that dem
 - **Design Patterns**: Built using efficient and maintainable coding practices and design patterns.
 
 ## Live Demo
-Experience the Path Finding Algorithm Visualizer in action: [Live Demo](https://zezo357.github.io/path_finding/)
+Experience the Path Finding Algorithm Visualizer in action: [Live Demo](https://abdelaziz-mahdy.github.io/path_finding/)
 
 ## Getting Started
 To run this project locally, clone the repository and ensure Flutter is installed on your machine.
 
 ```bash
-git clone https://github.com/zezo357/path_finding.git
+git clone https://github.com/abdelaziz-mahdy/path_finding.git
 cd path_finding
 flutter run
 
