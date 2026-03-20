@@ -4,20 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:path_finding/models/models.dart';
 
 class GridController {
-  // Singleton instance, initialized immediately
   static final GridController _instance = GridController._internal();
 
-  // Factory constructor
   factory GridController() {
     return _instance;
   }
 
-  // Private constructor
   GridController._internal() {
     _onInit();
   }
 
-  // Replace RxBool with ValueNotifier
   final ValueNotifier<bool> mouseClicked = ValueNotifier(false);
   final ValueNotifier<bool> findingPath = ValueNotifier(false);
 
@@ -25,6 +21,9 @@ class GridController {
   late int rows;
   late int columns;
   CursorType cursorType = CursorType.wall;
+
+  /// Incremented on every cancel/reset to abort running animations.
+  int _animationGeneration = 0;
 
   void _onInit() {
     createMatrix(25, 25);
@@ -88,11 +87,11 @@ class GridController {
       switch (cursorType) {
         case CursorType.start:
           newBlockState = BlockState.start;
-          resetStartPoint(); // Reset any existing start point
+          resetStartPoint();
           break;
         case CursorType.end:
           newBlockState = BlockState.end;
-          resetEndPoint(); // Reset any existing end point
+          resetEndPoint();
           break;
         case CursorType.wall:
           newBlockState = BlockState.wall;
@@ -110,20 +109,14 @@ class GridController {
 
   void setStartPoint(int row, int column) {
     if (cursorType == CursorType.start) {
-      // Reset existing start point if any
       resetStartPoint();
-
-      // Set the new start point
       matrix[row][column].value = BlockState.start;
     }
   }
 
   void setEndPoint(int row, int column) {
     if (cursorType == CursorType.end) {
-      // Reset existing end point if any
       resetEndPoint();
-
-      // Set the new end point
       matrix[row][column].value = BlockState.end;
     }
   }
@@ -133,7 +126,7 @@ class GridController {
       for (final blockState in row) {
         if (blockState.value == BlockState.start) {
           blockState.value = BlockState.none;
-          return; // Assuming there's only one start point, exit after resetting
+          return;
         }
       }
     }
@@ -144,7 +137,7 @@ class GridController {
       for (final blockState in row) {
         if (blockState.value == BlockState.end) {
           blockState.value = BlockState.none;
-          return; // Assuming there's only one end point, exit after resetting
+          return;
         }
       }
     }
@@ -164,7 +157,10 @@ class GridController {
   }
 
   void resetMatrix() {
-    // Reset any existing visited path
+    // Cancel any running animation
+    _animationGeneration++;
+    findingPath.value = false;
+
     for (int row = 0; row < matrix.length; row++) {
       for (int col = 0; col < matrix[row].length; col++) {
         if (matrix[row][col].value == BlockState.visited ||
@@ -176,23 +172,15 @@ class GridController {
   }
 
   void setRandomStartAndEndBlocks() {
-    // Create an instance of the Random class
     final Random random = Random();
 
-    // Generate a random row number for the start and end nodes
     final int startRow = random.nextInt(rows);
     final int endRow = random.nextInt(rows);
 
-    // Generate a random column number for the start and end nodes
-    final int startCol =
-        random.nextInt(columns ~/ 2); // start node on the left half
-    final int endCol = random.nextInt(columns ~/ 2) +
-        columns ~/ 2; // end node on the right half
+    final int startCol = random.nextInt(columns ~/ 2);
+    final int endCol = random.nextInt(columns ~/ 2) + columns ~/ 2;
 
-    // Set the start node
     matrix[startRow][startCol].value = BlockState.start;
-
-    // Set the end node
     matrix[endRow][endCol].value = BlockState.end;
   }
 
@@ -202,17 +190,23 @@ class GridController {
 
   Future<void> applyAlgorithmResult(AlgorithmResult result,
       {Duration timeBetweenChanges = const Duration(milliseconds: 20)}) async {
+    // Cancel any previous animation and capture this generation
+    _animationGeneration++;
+    final generation = _animationGeneration;
+
+    findingPath.value = true;
+
     final List<Change> changes = result.changes;
     final AlgorithmPath? path = result.path;
-    resetMatrix();
+    resetMatrixKeepGeneration();
 
-    // Apply the changes to the matrix
     for (final change in changes) {
+      if (_animationGeneration != generation) return;
+
       final int row = change.row;
       final int column = change.column;
       final BlockState newState = change.newState;
 
-      // Skip changes if it's the start or end point
       if (matrix[row][column].value == BlockState.start ||
           matrix[row][column].value == BlockState.end) {
         continue;
@@ -222,25 +216,40 @@ class GridController {
       await Future.delayed(timeBetweenChanges);
     }
 
-    // Update the end path
-    await updateEndPath(path);
-  }
+    if (_animationGeneration != generation) return;
 
-  Future<void> updateEndPath(AlgorithmPath? path) async {
-    if (path == null) {
-      throw Exception("Did not find end path");
+    if (path != null) {
+      await _updateEndPath(path, generation);
     }
 
-    // Apply the new end path
+    if (_animationGeneration == generation) {
+      findingPath.value = false;
+    }
+  }
+
+  /// Clears visited/path cells without bumping the generation counter.
+  void resetMatrixKeepGeneration() {
+    for (int row = 0; row < matrix.length; row++) {
+      for (int col = 0; col < matrix[row].length; col++) {
+        if (matrix[row][col].value == BlockState.visited ||
+            matrix[row][col].value == BlockState.path) {
+          matrix[row][col].value = BlockState.none;
+        }
+      }
+    }
+  }
+
+  Future<void> _updateEndPath(AlgorithmPath path, int generation) async {
     for (int i = 0; i < path.rows.length; i++) {
+      if (_animationGeneration != generation) return;
+
       final row = path.rows[i];
       final col = path.columns[i];
-      // Skip changes if it's the start or end point
+
       if (matrix[row][col].value == BlockState.start ||
           matrix[row][col].value == BlockState.end) {
         continue;
       }
-      // print("path $row,$col");
 
       matrix[row][col].value = BlockState.path;
       await Future.delayed(const Duration(milliseconds: 2));
