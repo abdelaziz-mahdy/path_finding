@@ -90,9 +90,11 @@ class _StreetMapPainter extends CustomPainter {
   // Visited overlay
   static const _visitedColor = Color(0x60B0BEC5);
 
-  // Path (route highlight)
-  static const _pathColor = Color(0xFF2196F3);
-  static const _pathGlow = Color(0x402196F3);
+  // Road path colors
+  static const _pathAsphalt = Color(0xFF555555);
+  static const _pathEdge = Color(0xFF3A3A3A);
+  static const _pathCenterLine = Color(0xFFFFD54F);
+  static const _pathGlow = Color(0x302196F3);
 
   // Markers
   static const _startColor = Color(0xFF4CAF50);
@@ -143,24 +145,8 @@ class _StreetMapPainter extends CustomPainter {
       }
     }
 
-    // 4) Draw path with glow effect (route)
-    final pathGlowPaint = Paint()..color = _pathGlow;
-    final pathPaint = Paint()..color = _pathColor;
-
-    for (int r = 0; r < rows; r++) {
-      for (int c = 0; c < columns; c++) {
-        if (matrix[r][c] == BlockState.path) {
-          final rect = Rect.fromLTWH(c * cellW, r * cellH, cellW, cellH);
-          // Glow (slightly larger)
-          canvas.drawRect(rect.inflate(1.5), pathGlowPaint);
-          // Path core
-          canvas.drawRRect(
-            RRect.fromRectAndRadius(rect.deflate(0.5), const Radius.circular(2)),
-            pathPaint,
-          );
-        }
-      }
-    }
+    // 4) Draw path as a connected road
+    _drawPathRoad(canvas, matrix, cellW, cellH);
 
     // 5) Draw buildings (walls) with 3D effect
     final shadowOffset = cellW * 0.15;
@@ -250,6 +236,218 @@ class _StreetMapPainter extends CustomPainter {
       radius * 0.4,
       Paint()..color = Colors.white,
     );
+  }
+
+  void _drawPathRoad(
+      Canvas canvas, List<List<BlockState>> matrix, double cellW, double cellH) {
+    // Collect ordered path cells
+    final pathCells = <Offset>[];
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < columns; c++) {
+        if (matrix[r][c] == BlockState.path) {
+          pathCells.add(Offset(c * cellW + cellW / 2, r * cellH + cellH / 2));
+        }
+      }
+    }
+    if (pathCells.isEmpty) return;
+
+    // Sort path cells into connected order using adjacency
+    final ordered = _orderPathCells(matrix, cellW, cellH);
+    if (ordered.isEmpty) return;
+
+    final roadWidth = cellW * 0.75;
+
+    // Glow under the road
+    final glowPaint = Paint()
+      ..color = _pathGlow
+      ..strokeWidth = roadWidth + 4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    // Road edge (dark border)
+    final edgePaint = Paint()
+      ..color = _pathEdge
+      ..strokeWidth = roadWidth + 2
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    // Asphalt surface
+    final asphaltPaint = Paint()
+      ..color = _pathAsphalt
+      ..strokeWidth = roadWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..style = PaintingStyle.stroke;
+
+    // Center dashed line
+    final centerLinePaint = Paint()
+      ..color = _pathCenterLine
+      ..strokeWidth = 1.5
+      ..strokeCap = StrokeCap.round
+      ..style = PaintingStyle.stroke;
+
+    // Build the road path
+    final roadPath = ui.Path();
+    roadPath.moveTo(ordered[0].dx, ordered[0].dy);
+    for (int i = 1; i < ordered.length; i++) {
+      roadPath.lineTo(ordered[i].dx, ordered[i].dy);
+    }
+
+    // Draw layers: glow → edge → asphalt
+    canvas.drawPath(roadPath, glowPaint);
+    canvas.drawPath(roadPath, edgePaint);
+    canvas.drawPath(roadPath, asphaltPaint);
+
+    // Draw dashed center line
+    _drawDashedLine(canvas, ordered, centerLinePaint, cellW * 0.4, cellW * 0.3);
+  }
+
+  /// Orders path cells by walking adjacency from start to end.
+  List<Offset> _orderPathCells(
+      List<List<BlockState>> matrix, double cellW, double cellH) {
+    // Find all path cells and start/end
+    int? startR, startC, endR, endC;
+    final isPath = List.generate(
+        rows, (r) => List.generate(columns, (c) => false));
+
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < columns; c++) {
+        if (matrix[r][c] == BlockState.path) {
+          isPath[r][c] = true;
+        } else if (matrix[r][c] == BlockState.start) {
+          startR = r;
+          startC = c;
+        } else if (matrix[r][c] == BlockState.end) {
+          endR = r;
+          endC = c;
+        }
+      }
+    }
+
+    // Find path cell adjacent to start
+    int? firstR, firstC;
+    if (startR != null && startC != null) {
+      for (final (dr, dc) in [(0, 1), (0, -1), (1, 0), (-1, 0)]) {
+        final nr = startR + dr;
+        final nc = startC + dc;
+        if (nr >= 0 && nr < rows && nc >= 0 && nc < columns && isPath[nr][nc]) {
+          firstR = nr;
+          firstC = nc;
+          break;
+        }
+      }
+    }
+
+    if (firstR == null || firstC == null) {
+      // Fallback: just return path cells in scan order
+      final result = <Offset>[];
+      for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < columns; c++) {
+          if (isPath[r][c]) {
+            result.add(Offset(c * cellW + cellW / 2, r * cellH + cellH / 2));
+          }
+        }
+      }
+      return result;
+    }
+
+    // Walk from start marker through path to end
+    final ordered = <Offset>[
+      Offset(startC! * cellW + cellW / 2, startR! * cellH + cellH / 2),
+    ];
+
+    final visited = List.generate(
+        rows, (r) => List.generate(columns, (c) => false));
+    var cr = firstR;
+    var cc = firstC;
+
+    while (true) {
+      visited[cr][cc] = true;
+      ordered.add(Offset(cc * cellW + cellW / 2, cr * cellH + cellH / 2));
+
+      // Check if adjacent to end
+      if (endR != null && endC != null) {
+        if ((cr - endR).abs() + (cc - endC).abs() == 1) {
+          ordered.add(
+              Offset(endC * cellW + cellW / 2, endR * cellH + cellH / 2));
+          break;
+        }
+      }
+
+      // Find next unvisited path neighbor
+      bool found = false;
+      for (final (dr, dc) in [(0, 1), (0, -1), (1, 0), (-1, 0)]) {
+        final nr = cr + dr;
+        final nc = cc + dc;
+        if (nr >= 0 &&
+            nr < rows &&
+            nc >= 0 &&
+            nc < columns &&
+            isPath[nr][nc] &&
+            !visited[nr][nc]) {
+          cr = nr;
+          cc = nc;
+          found = true;
+          break;
+        }
+      }
+      if (!found) break;
+    }
+
+    return ordered;
+  }
+
+  void _drawDashedLine(Canvas canvas, List<Offset> points, Paint paint,
+      double dashLen, double gapLen) {
+    double remaining = 0;
+    bool drawing = true;
+
+    for (int i = 1; i < points.length; i++) {
+      var from = points[i - 1];
+      final to = points[i];
+      final dx = to.dx - from.dx;
+      final dy = to.dy - from.dy;
+      final segLen = (dx * dx + dy * dy).clamp(0.001, double.infinity);
+      final sqrtDist = _sqrt(segLen);
+      final ux = dx / sqrtDist;
+      final uy = dy / sqrtDist;
+
+      var traveled = 0.0;
+      while (traveled < sqrtDist) {
+        final target = drawing ? dashLen : gapLen;
+        final available = sqrtDist - traveled;
+        final step = (target - remaining).clamp(0.0, available);
+
+        if (drawing) {
+          final end = Offset(from.dx + ux * step, from.dy + uy * step);
+          canvas.drawLine(from, end, paint);
+          from = end;
+        } else {
+          from = Offset(from.dx + ux * step, from.dy + uy * step);
+        }
+
+        traveled += step;
+        remaining += step;
+
+        if (remaining >= target) {
+          remaining = 0;
+          drawing = !drawing;
+        }
+      }
+    }
+  }
+
+  static double _sqrt(double v) {
+    // Newton's method approximation for performance
+    double x = v;
+    double y = (x + 1) / 2;
+    while ((y - x).abs() > 0.001) {
+      x = y;
+      y = (x + v / x) / 2;
+    }
+    return y;
   }
 
   @override
