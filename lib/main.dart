@@ -3,11 +3,12 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:path_finding/algorithm/a_star.dart';
 import 'package:path_finding/algorithm/algorithm.dart';
 import 'package:path_finding/controllers/controller.dart';
-import 'package:path_finding/widgets/action_button_widget.dart';
+import 'package:path_finding/widgets/algorithm_info.dart';
 import 'package:path_finding/widgets/algorithms.dart';
 import 'package:path_finding/widgets/grid.dart';
 import 'package:path_finding/models/models.dart';
 import 'package:path_finding/widgets/speed_control_slider.dart';
+import 'package:path_finding/widgets/tool_bar.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,66 +24,75 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Path Finding Visualizer',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF4A90D9),
+          brightness: Brightness.light,
+        ),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Path Finding Visualizer'),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF4A90D9),
+          brightness: Brightness.dark,
+        ),
+        useMaterial3: true,
+      ),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+  const MyHomePage({super.key});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String _selectedAction = 'none';
   Algorithm _algorithm = AStarAlgorithm();
-  Duration timeBetweenChanges = const Duration(milliseconds: 20);
-  void _handleAction(String action) {
-    setState(() {
-      _selectedAction = _selectedAction == action ? 'none' : action;
-    });
+  CursorType _selectedTool = CursorType.wall;
+  Duration _timeBetweenChanges = const Duration(milliseconds: 20);
+  bool _showInfo = false;
+
+  @override
+  void initState() {
+    super.initState();
+    GridController().cursorType = _selectedTool;
+  }
+
+  void _startAlgorithm() {
     final controller = GridController();
-    if (_selectedAction == 'none') {
-      controller.cursorType = CursorType.none;
-      return;
-    }
-    switch (action) {
-      case 'start':
-        controller.cursorType = CursorType.start;
-        break;
-      case 'end':
-        controller.cursorType = CursorType.end;
-        break;
-      case 'wall':
-        controller.cursorType = CursorType.wall;
-        break;
-      case 'eraser':
-        controller.cursorType = CursorType.eraser;
-      case 'reset':
-        controller.resetMatrix();
-        break;
-      case 'startAlgorithm':
-        _startAlgorithm();
-        break;
-    }
+    AlgorithmResult result = _algorithm.execute(controller.getMatrixValues());
+    controller.applyAlgorithmResult(result,
+        timeBetweenChanges: _timeBetweenChanges);
   }
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        backgroundColor: colorScheme.surface,
+        surfaceTintColor: Colors.transparent,
+        title: Row(
+          children: [
+            Icon(Icons.route_rounded, color: colorScheme.primary, size: 24),
+            const SizedBox(width: 8),
+            Text(
+              'Pathfinder',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: colorScheme.onSurface,
+              ),
+            ),
+          ],
+        ),
         actions: [
-          // Spacer(),
           Algorithms(
             onChanged: (Algorithm algorithm) {
               setState(() {
@@ -91,92 +101,125 @@ class _MyHomePageState extends State<MyHomePage> {
             },
             value: _algorithm,
           ),
-          const SizedBox(
-            width: 10,
+          IconButton(
+            icon: Icon(
+              _showInfo ? Icons.info : Icons.info_outline,
+              color: _showInfo ? colorScheme.primary : colorScheme.onSurfaceVariant,
+            ),
+            tooltip: 'Algorithm info',
+            onPressed: () => setState(() => _showInfo = !_showInfo),
           ),
-
+          const SizedBox(width: 8),
           SpeedControlSlider(
-              slowestSpeedDuration: const Duration(milliseconds: 300),
-              fastestSpeedDuration: const Duration(milliseconds: 1),
-              currentValue: timeBetweenChanges,
-              onChanged: (Duration timeBetweenChanges) {
-                setState(() {
-                  this.timeBetweenChanges = timeBetweenChanges;
-                });
-              }),
-                        const SizedBox(
-            width: 10,
+            slowestSpeedDuration: const Duration(milliseconds: 300),
+            fastestSpeedDuration: const Duration(milliseconds: 1),
+            currentValue: _timeBetweenChanges,
+            onChanged: (Duration timeBetweenChanges) {
+              setState(() {
+                _timeBetweenChanges = timeBetweenChanges;
+              });
+            },
           ),
-
+          const SizedBox(width: 12),
         ],
       ),
-      body: Center(
-        child: Grid(
-          horizontalBlockCount: GridController().rows,
-          verticalBlockCount: GridController().columns,
-        ),
-      ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
+      body: Column(
         children: [
-          ActionButtonWidget(
-            action: 'start',
-            label: 'Start',
-            selectedAction: _selectedAction,
-            handleAction: _handleAction,
-            isCursorType: true,
+          // Algorithm info panel (collapsible)
+          AnimatedSize(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeInOut,
+            child: _showInfo
+                ? Padding(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    child: AlgorithmInfoPanel(algorithm: _algorithm),
+                  )
+                : const SizedBox.shrink(),
           ),
-          const SizedBox(height: 10),
-          ActionButtonWidget(
-            action: 'end',
-            label: 'End',
-            selectedAction: _selectedAction,
-            handleAction: _handleAction,
-            isCursorType: true,
+          // Grid legend
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _LegendItem(color: Color(0xFF4CAF50), label: 'Start'),
+                SizedBox(width: 12),
+                _LegendItem(color: Color(0xFFE53935), label: 'End'),
+                SizedBox(width: 12),
+                _LegendItem(color: Color(0xFF37474F), label: 'Wall'),
+                SizedBox(width: 12),
+                _LegendItem(
+                    color: Color(0xFF90A4AE), label: 'Visited'),
+                SizedBox(width: 12),
+                _LegendItem(
+                    color: Color(0xFF42A5F5), label: 'Path'),
+              ],
+            ),
           ),
-          const SizedBox(height: 10),
-          ActionButtonWidget(
-            action: 'wall',
-            label: 'Wall',
-            selectedAction: _selectedAction,
-            handleAction: _handleAction,
-            isCursorType: true,
+          // Grid
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
+                child: Grid(
+                  horizontalBlockCount: GridController().rows,
+                  verticalBlockCount: GridController().columns,
+                  borderColor: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                ),
+              ),
+            ),
           ),
-          const SizedBox(height: 10),
-          ActionButtonWidget(
-            action: 'eraser',
-            label: 'Eraser',
-            selectedAction: _selectedAction,
-            handleAction: _handleAction,
-            isCursorType: true,
-          ),
-          const SizedBox(height: 25),
-          ActionButtonWidget(
-            action: 'reset',
-            label: 'Reset',
-            icon: Icons.refresh,
-            selectedAction: _selectedAction,
-            handleAction: _handleAction,
-            isCursorType: false,
-          ),
-          const SizedBox(height: 10),
-          ActionButtonWidget(
-            action: 'startAlgorithm',
-            label: 'Start',
-            icon: Icons.play_arrow,
-            selectedAction: _selectedAction,
-            handleAction: _handleAction,
-            isCursorType: false,
+          // Bottom toolbar
+          ToolBar(
+            selectedTool: _selectedTool,
+            onToolChanged: (tool) {
+              setState(() {
+                _selectedTool = tool;
+                GridController().cursorType = tool;
+              });
+            },
+            onReset: () => GridController().resetMatrix(),
+            onStart: _startAlgorithm,
           ),
         ],
       ),
     );
   }
+}
 
-  void _startAlgorithm() {
-    final controller = GridController();
-    AlgorithmResult result = _algorithm.execute(controller.getMatrixValues());
-    controller.applyAlgorithmResult(result,
-        timeBetweenChanges: timeBetweenChanges);
+class _LegendItem extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _LegendItem({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(
+              color: color.withValues(alpha: 0.5),
+              width: 1,
+            ),
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+        ),
+      ],
+    );
   }
 }

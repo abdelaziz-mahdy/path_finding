@@ -51,19 +51,17 @@ class GridController {
   Color getFillColorFromState(BlockState state) {
     switch (state) {
       case BlockState.none:
-        return Colors.white;
+        return const Color(0xFFFAFAFA);
       case BlockState.wall:
-        return Colors.black;
+        return const Color(0xFF37474F);
       case BlockState.visited:
-        return Colors.grey;
+        return const Color(0xFF90A4AE);
       case BlockState.path:
-        return Colors.blue;
+        return const Color(0xFF42A5F5);
       case BlockState.start:
-        return Colors.green;
+        return const Color(0xFF4CAF50);
       case BlockState.end:
-        return Colors.red;
-      default:
-        return Colors.white;
+        return const Color(0xFFE53935);
     }
   }
 
@@ -81,7 +79,6 @@ class GridController {
 
   void updateBlockState(int row, int column) {
     if (rows < 0 || columns < 0 || row >= rows || column >= columns) {
-      print("out of bounds");
       return;
     }
     if (isChangingWallStateAllowed) {
@@ -104,7 +101,6 @@ class GridController {
             newBlockState = BlockState.none;
           }
         case CursorType.none:
-        default:
           break;
       }
 

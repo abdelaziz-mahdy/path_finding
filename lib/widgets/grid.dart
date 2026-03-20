@@ -49,11 +49,9 @@ class _GridState extends State<Grid> {
         return Listener(
             onPointerDown: (details) {
               controller.isMouseClicked = true;
-              print(" mouse clicked ");
             },
             onPointerUp: (details) {
               controller.isMouseClicked = false;
-              print(" mouse released ");
             },
             onPointerMove: (details) {
               _handlePointerMove(details, blockWidth, blockHeight);
