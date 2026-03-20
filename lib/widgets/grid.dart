@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:path_finding/controllers/controller.dart';
-import 'package:path_finding/widgets/block.dart';
 
 class Grid extends StatefulWidget {
   const Grid({
@@ -20,76 +19,51 @@ class Grid extends StatefulWidget {
 
 class _GridState extends State<Grid> {
   final GridController controller = GridController();
-  int justUpdatedRow = -1;
-  int justUpdatedCol = -1;
+  int _lastRow = -1;
+  int _lastCol = -1;
 
-  void _handlePointerEvent(PointerEvent details, double blockWidth, double blockHeight) {
-    int row = (details.localPosition.dy / blockHeight).floor();
-    int col = (details.localPosition.dx / blockWidth).floor();
-    if (row == justUpdatedRow && col == justUpdatedCol) return;
+  void _handlePointer(PointerEvent details, double cellW, double cellH) {
+    final row = (details.localPosition.dy / cellH).floor();
+    final col = (details.localPosition.dx / cellW).floor();
+    if (row == _lastRow && col == _lastCol) return;
     if (row < 0 || row >= widget.verticalBlockCount) return;
     if (col < 0 || col >= widget.horizontalBlockCount) return;
     controller.updateBlockState(row, col);
-    justUpdatedRow = row;
-    justUpdatedCol = col;
+    _lastRow = row;
+    _lastCol = col;
   }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
-      builder: (BuildContext context, BoxConstraints constraints) {
-        double gridWidth = constraints.maxWidth;
-        double gridHeight = constraints.maxHeight;
-        double blockWidth = gridWidth / widget.horizontalBlockCount;
-        double blockHeight = gridHeight / widget.verticalBlockCount;
-        double aspectRatio = blockWidth / blockHeight;
+      builder: (context, constraints) {
+        final cellW = constraints.maxWidth / widget.horizontalBlockCount;
+        final cellH = constraints.maxHeight / widget.verticalBlockCount;
 
         return Listener(
-          onPointerDown: (details) {
+          onPointerDown: (d) {
             controller.isMouseClicked = true;
-            _handlePointerEvent(details, blockWidth, blockHeight);
+            _handlePointer(d, cellW, cellH);
           },
-          onPointerUp: (details) {
+          onPointerUp: (d) {
             controller.isMouseClicked = false;
-            justUpdatedRow = -1;
-            justUpdatedCol = -1;
+            _lastRow = -1;
+            _lastCol = -1;
           },
-          onPointerMove: (details) {
-            _handlePointerEvent(details, blockWidth, blockHeight);
-          },
-          child: Stack(
-            children: [
-              GridView.builder(
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: widget.horizontalBlockCount,
-                  childAspectRatio: aspectRatio,
+          onPointerMove: (d) => _handlePointer(d, cellW, cellH),
+          child: ListenableBuilder(
+            listenable: controller,
+            builder: (context, _) {
+              return CustomPaint(
+                size: Size(constraints.maxWidth, constraints.maxHeight),
+                painter: _GridPainter(
+                  controller: controller,
+                  rows: widget.verticalBlockCount,
+                  columns: widget.horizontalBlockCount,
+                  gridLineColor: widget.borderColor,
                 ),
-                itemCount:
-                    widget.horizontalBlockCount * widget.verticalBlockCount,
-                itemBuilder: (context, index) {
-                  final row = index ~/ widget.horizontalBlockCount;
-                  final col = index % widget.horizontalBlockCount;
-
-                  return Block(
-                    controller: controller,
-                    row: row,
-                    col: col,
-                  );
-                },
-              ),
-              // Grid lines overlay
-              IgnorePointer(
-                child: CustomPaint(
-                  size: Size(gridWidth, gridHeight),
-                  painter: _GridLinesPainter(
-                    rows: widget.verticalBlockCount,
-                    columns: widget.horizontalBlockCount,
-                    color: widget.borderColor,
-                  ),
-                ),
-              ),
-            ],
+              );
+            },
           ),
         );
       },
@@ -97,43 +71,52 @@ class _GridState extends State<Grid> {
   }
 }
 
-class _GridLinesPainter extends CustomPainter {
+class _GridPainter extends CustomPainter {
+  final GridController controller;
   final int rows;
   final int columns;
-  final Color color;
+  final Color gridLineColor;
 
-  _GridLinesPainter({
+  _GridPainter({
+    required this.controller,
     required this.rows,
     required this.columns,
-    required this.color,
+    required this.gridLineColor,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
+    final cellW = size.width / columns;
+    final cellH = size.height / rows;
+    final cellPaint = Paint()..style = PaintingStyle.fill;
+
+    // Draw cells
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < columns; c++) {
+        cellPaint.color = controller.getFillColorFromState(controller.matrix[r][c]);
+        canvas.drawRect(
+          Rect.fromLTWH(c * cellW, r * cellH, cellW, cellH),
+          cellPaint,
+        );
+      }
+    }
+
+    // Draw grid lines
+    final linePaint = Paint()
+      ..color = gridLineColor
       ..strokeWidth = 0.5
       ..style = PaintingStyle.stroke;
 
-    final cellWidth = size.width / columns;
-    final cellHeight = size.height / rows;
-
-    // Draw vertical lines
     for (int i = 0; i <= columns; i++) {
-      final x = i * cellWidth;
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      final x = i * cellW;
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), linePaint);
     }
-
-    // Draw horizontal lines
     for (int i = 0; i <= rows; i++) {
-      final y = i * cellHeight;
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      final y = i * cellH;
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
     }
   }
 
   @override
-  bool shouldRepaint(_GridLinesPainter oldDelegate) =>
-      rows != oldDelegate.rows ||
-      columns != oldDelegate.columns ||
-      color != oldDelegate.color;
+  bool shouldRepaint(_GridPainter oldDelegate) => true;
 }

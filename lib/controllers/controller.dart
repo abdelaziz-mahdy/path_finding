@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:path_finding/models/models.dart';
 
-class GridController {
+class GridController extends ChangeNotifier {
   static final GridController _instance = GridController._internal();
 
   factory GridController() {
@@ -14,129 +14,87 @@ class GridController {
     _onInit();
   }
 
-  final ValueNotifier<bool> mouseClicked = ValueNotifier(false);
-  final ValueNotifier<bool> findingPath = ValueNotifier(false);
+  bool _findingPath = false;
 
-  late List<List<ValueNotifier<BlockState>>> matrix;
+  late List<List<BlockState>> matrix;
   late int rows;
   late int columns;
   CursorType cursorType = CursorType.wall;
 
-  /// Incremented on every cancel/reset to abort running animations.
   int _animationGeneration = 0;
+
+  bool get findingPath => _findingPath;
 
   void _onInit() {
     createMatrix(25, 25);
     setRandomStartAndEndBlocks();
   }
 
-  Color fillColor(int row, int column) {
-    final state = matrix[row][column].value;
-    return getFillColorFromState(state);
+  List<List<BlockState>> getMatrixValues() {
+    return List.generate(
+      rows,
+      (r) => List.generate(columns, (c) => matrix[r][c]),
+    );
   }
 
-  List<List<BlockState>> getMatrixValues() {
-    final List<List<BlockState>> matrixValues = [];
-    for (final row in matrix) {
-      final List<BlockState> rowValues = [];
-      for (final blockState in row) {
-        rowValues.add(blockState.value);
-      }
-      matrixValues.add(rowValues);
-    }
-    return matrixValues;
-  }
+  static const Map<BlockState, Color> stateColors = {
+    BlockState.none: Color(0xFFFAFAFA),
+    BlockState.wall: Color(0xFF37474F),
+    BlockState.visited: Color(0xFF90A4AE),
+    BlockState.path: Color(0xFF42A5F5),
+    BlockState.start: Color(0xFF4CAF50),
+    BlockState.end: Color(0xFFE53935),
+  };
 
   Color getFillColorFromState(BlockState state) {
-    switch (state) {
-      case BlockState.none:
-        return const Color(0xFFFAFAFA);
-      case BlockState.wall:
-        return const Color(0xFF37474F);
-      case BlockState.visited:
-        return const Color(0xFF90A4AE);
-      case BlockState.path:
-        return const Color(0xFF42A5F5);
-      case BlockState.start:
-        return const Color(0xFF4CAF50);
-      case BlockState.end:
-        return const Color(0xFFE53935);
-    }
+    return stateColors[state] ?? const Color(0xFFFAFAFA);
   }
 
-  set isMouseClicked(bool value) {
-    mouseClicked.value = value;
-  }
-
-  bool get isMouseClicked {
-    return mouseClicked.value;
-  }
+  bool isMouseClicked = false;
 
   bool get isChangingWallStateAllowed {
-    return mouseClicked.value && !findingPath.value;
+    return isMouseClicked && !_findingPath;
   }
 
   void updateBlockState(int row, int column) {
-    if (rows < 0 || columns < 0 || row >= rows || column >= columns) {
+    if (row < 0 || column < 0 || row >= rows || column >= columns) {
       return;
     }
-    if (isChangingWallStateAllowed) {
-      final currentBlockState = matrix[row][column].value;
-      BlockState newBlockState = currentBlockState;
+    if (!isChangingWallStateAllowed) return;
 
-      switch (cursorType) {
-        case CursorType.start:
-          newBlockState = BlockState.start;
-          resetStartPoint();
-          break;
-        case CursorType.end:
-          newBlockState = BlockState.end;
-          resetEndPoint();
-          break;
-        case CursorType.wall:
-          newBlockState = BlockState.wall;
-        case CursorType.eraser:
-          if (currentBlockState == BlockState.wall) {
-            newBlockState = BlockState.none;
-          }
-        case CursorType.none:
-          break;
-      }
+    final currentBlockState = matrix[row][column];
+    BlockState newBlockState = currentBlockState;
 
-      matrix[row][column].value = newBlockState;
-    }
-  }
-
-  void setStartPoint(int row, int column) {
-    if (cursorType == CursorType.start) {
-      resetStartPoint();
-      matrix[row][column].value = BlockState.start;
-    }
-  }
-
-  void setEndPoint(int row, int column) {
-    if (cursorType == CursorType.end) {
-      resetEndPoint();
-      matrix[row][column].value = BlockState.end;
-    }
-  }
-
-  void resetStartPoint() {
-    for (final row in matrix) {
-      for (final blockState in row) {
-        if (blockState.value == BlockState.start) {
-          blockState.value = BlockState.none;
-          return;
+    switch (cursorType) {
+      case CursorType.start:
+        newBlockState = BlockState.start;
+        _resetPoint(BlockState.start);
+        break;
+      case CursorType.end:
+        newBlockState = BlockState.end;
+        _resetPoint(BlockState.end);
+        break;
+      case CursorType.wall:
+        newBlockState = BlockState.wall;
+      case CursorType.eraser:
+        if (currentBlockState == BlockState.wall) {
+          newBlockState = BlockState.none;
         }
-      }
+      case CursorType.none:
+        break;
+    }
+
+    if (matrix[row][column] != newBlockState) {
+      matrix[row][column] = newBlockState;
+      notifyListeners();
     }
   }
 
-  void resetEndPoint() {
-    for (final row in matrix) {
-      for (final blockState in row) {
-        if (blockState.value == BlockState.end) {
-          blockState.value = BlockState.none;
+  void _resetPoint(BlockState target) {
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < columns; c++) {
+        if (matrix[r][c] == target) {
+          matrix[r][c] = BlockState.none;
           return;
         }
       }
@@ -146,29 +104,27 @@ class GridController {
   void createMatrix(int rows, int columns) {
     this.rows = rows;
     this.columns = columns;
-
     matrix = List.generate(
       rows,
-      (_) => List<ValueNotifier<BlockState>>.generate(
-        columns,
-        (_) => ValueNotifier<BlockState>(BlockState.none),
-      ),
+      (_) => List.generate(columns, (_) => BlockState.none),
     );
   }
 
   void resetMatrix() {
-    // Cancel any running animation
     _animationGeneration++;
-    findingPath.value = false;
+    _findingPath = false;
 
-    for (int row = 0; row < matrix.length; row++) {
-      for (int col = 0; col < matrix[row].length; col++) {
-        if (matrix[row][col].value == BlockState.visited ||
-            matrix[row][col].value == BlockState.path) {
-          matrix[row][col].value = BlockState.none;
+    bool changed = false;
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < columns; c++) {
+        if (matrix[r][c] == BlockState.visited ||
+            matrix[r][c] == BlockState.path) {
+          matrix[r][c] = BlockState.none;
+          changed = true;
         }
       }
     }
+    if (changed) notifyListeners();
   }
 
   void setRandomStartAndEndBlocks() {
@@ -176,83 +132,83 @@ class GridController {
 
     final int startRow = random.nextInt(rows);
     final int endRow = random.nextInt(rows);
-
     final int startCol = random.nextInt(columns ~/ 2);
     final int endCol = random.nextInt(columns ~/ 2) + columns ~/ 2;
 
-    matrix[startRow][startCol].value = BlockState.start;
-    matrix[endRow][endCol].value = BlockState.end;
-  }
-
-  ValueNotifier<BlockState> getRxBlockState(int row, int column) {
-    return matrix[row][column];
+    matrix[startRow][startCol] = BlockState.start;
+    matrix[endRow][endCol] = BlockState.end;
+    notifyListeners();
   }
 
   Future<void> applyAlgorithmResult(AlgorithmResult result,
       {Duration timeBetweenChanges = const Duration(milliseconds: 20)}) async {
-    // Cancel any previous animation and capture this generation
     _animationGeneration++;
     final generation = _animationGeneration;
+    _findingPath = true;
 
-    findingPath.value = true;
+    // Clear visited/path first
+    for (int r = 0; r < rows; r++) {
+      for (int c = 0; c < columns; c++) {
+        if (matrix[r][c] == BlockState.visited ||
+            matrix[r][c] == BlockState.path) {
+          matrix[r][c] = BlockState.none;
+        }
+      }
+    }
+    notifyListeners();
 
-    final List<Change> changes = result.changes;
-    final AlgorithmPath? path = result.path;
-    resetMatrixKeepGeneration();
+    final changes = result.changes;
+    final path = result.path;
+
+    // Batch changes: accumulate a few before notifying
+    int batchCount = 0;
+    const batchSize = 3;
 
     for (final change in changes) {
       if (_animationGeneration != generation) return;
 
-      final int row = change.row;
-      final int column = change.column;
-      final BlockState newState = change.newState;
-
-      if (matrix[row][column].value == BlockState.start ||
-          matrix[row][column].value == BlockState.end) {
+      if (matrix[change.row][change.column] == BlockState.start ||
+          matrix[change.row][change.column] == BlockState.end) {
         continue;
       }
 
-      matrix[row][column].value = newState;
-      await Future.delayed(timeBetweenChanges);
+      matrix[change.row][change.column] = change.newState;
+      batchCount++;
+
+      if (batchCount >= batchSize) {
+        batchCount = 0;
+        notifyListeners();
+        await Future.delayed(timeBetweenChanges);
+      }
+    }
+
+    // Flush remaining
+    if (batchCount > 0 && _animationGeneration == generation) {
+      notifyListeners();
     }
 
     if (_animationGeneration != generation) return;
 
+    // Draw final path
     if (path != null) {
-      await _updateEndPath(path, generation);
+      for (int i = 0; i < path.rows.length; i++) {
+        if (_animationGeneration != generation) return;
+
+        final r = path.rows[i];
+        final c = path.columns[i];
+        if (matrix[r][c] == BlockState.start ||
+            matrix[r][c] == BlockState.end) {
+          continue;
+        }
+
+        matrix[r][c] = BlockState.path;
+        notifyListeners();
+        await Future.delayed(const Duration(milliseconds: 2));
+      }
     }
 
     if (_animationGeneration == generation) {
-      findingPath.value = false;
-    }
-  }
-
-  /// Clears visited/path cells without bumping the generation counter.
-  void resetMatrixKeepGeneration() {
-    for (int row = 0; row < matrix.length; row++) {
-      for (int col = 0; col < matrix[row].length; col++) {
-        if (matrix[row][col].value == BlockState.visited ||
-            matrix[row][col].value == BlockState.path) {
-          matrix[row][col].value = BlockState.none;
-        }
-      }
-    }
-  }
-
-  Future<void> _updateEndPath(AlgorithmPath path, int generation) async {
-    for (int i = 0; i < path.rows.length; i++) {
-      if (_animationGeneration != generation) return;
-
-      final row = path.rows[i];
-      final col = path.columns[i];
-
-      if (matrix[row][col].value == BlockState.start ||
-          matrix[row][col].value == BlockState.end) {
-        continue;
-      }
-
-      matrix[row][col].value = BlockState.path;
-      await Future.delayed(const Duration(milliseconds: 2));
+      _findingPath = false;
     }
   }
 }
