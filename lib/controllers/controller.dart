@@ -26,7 +26,7 @@ class GridController extends ChangeNotifier {
   bool get findingPath => _findingPath;
 
   void _onInit() {
-    createMatrix(25, 25);
+    createMatrix(50, 50);
     setRandomStartAndEndBlocks();
   }
 
