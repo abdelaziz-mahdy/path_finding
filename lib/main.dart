@@ -54,20 +54,20 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   Algorithm _algorithm = AStarAlgorithm();
   CursorType _selectedTool = CursorType.wall;
-  Duration _timeBetweenChanges = const Duration(milliseconds: 20);
+  Duration _timeBetweenChanges = const Duration(milliseconds: 10);
   bool _showInfo = false;
 
   @override
   void initState() {
     super.initState();
     GridController().cursorType = _selectedTool;
+    GridController().timeBetweenChanges = _timeBetweenChanges;
   }
 
   void _startAlgorithm() {
     final controller = GridController();
     AlgorithmResult result = _algorithm.execute(controller.getMatrixValues());
-    controller.applyAlgorithmResult(result,
-        timeBetweenChanges: _timeBetweenChanges);
+    controller.applyAlgorithmResult(result);
   }
 
   @override
@@ -111,13 +111,14 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           const SizedBox(width: 8),
           SpeedControlSlider(
-            slowestSpeedDuration: const Duration(milliseconds: 300),
-            fastestSpeedDuration: const Duration(milliseconds: 1),
+            slowestSpeedDuration: const Duration(milliseconds: 500),
+            fastestSpeedDuration: Duration.zero,
             currentValue: _timeBetweenChanges,
-            onChanged: (Duration timeBetweenChanges) {
+            onChanged: (Duration value) {
               setState(() {
-                _timeBetweenChanges = timeBetweenChanges;
+                _timeBetweenChanges = value;
               });
+              GridController().timeBetweenChanges = value;
             },
           ),
           const SizedBox(width: 12),

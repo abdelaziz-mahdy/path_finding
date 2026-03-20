@@ -23,6 +23,10 @@ class GridController extends ChangeNotifier {
 
   int _animationGeneration = 0;
 
+  /// Current animation speed — read live during animation so slider changes
+  /// take effect immediately.
+  Duration timeBetweenChanges = const Duration(milliseconds: 20);
+
   bool get findingPath => _findingPath;
 
   void _onInit() {
@@ -140,8 +144,7 @@ class GridController extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> applyAlgorithmResult(AlgorithmResult result,
-      {Duration timeBetweenChanges = const Duration(milliseconds: 20)}) async {
+  Future<void> applyAlgorithmResult(AlgorithmResult result) async {
     _animationGeneration++;
     final generation = _animationGeneration;
     _findingPath = true;
