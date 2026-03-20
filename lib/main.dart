@@ -147,13 +147,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 SizedBox(width: 12),
                 _LegendItem(color: Color(0xFFE53935), label: 'End'),
                 SizedBox(width: 12),
-                _LegendItem(color: Color(0xFF37474F), label: 'Wall'),
+                _LegendItem(color: Color(0xFF5C6B7A), label: 'Building'),
                 SizedBox(width: 12),
                 _LegendItem(
-                    color: Color(0xFF90A4AE), label: 'Visited'),
+                    color: Color(0xFFB0BEC5), label: 'Explored'),
                 SizedBox(width: 12),
                 _LegendItem(
-                    color: Color(0xFF42A5F5), label: 'Path'),
+                    color: Color(0xFF2196F3), label: 'Route'),
               ],
             ),
           ),
